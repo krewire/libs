@@ -51,7 +51,7 @@ gofmt -l . && go vet ./...
 - `KWL-CORE-W0J2X` — Errors & exit codes (extended by K1N2Q)
 - `KWL-TERM-R934Y` — Terminal I/O & rendering
 
-All specs live centrally in `krewire/internal` at `docs/specs/libs/` (see `docs/specs/MOVED.md`); `internal/docs/specs/libs/index.md` is the source.
+All specs live in `docs/specs/` (`KWL-*`).
 
 ## Related Repositories
 

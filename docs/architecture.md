@@ -25,6 +25,6 @@ libs/
 
 ## Conventions
 
-- Documentation in English, Markdown, spec-driven (`internal/docs/specs/libs/` in `krewire/internal`); requirements declare `Scope` (`KWL-ARCH-J2K9Q`), tests declare `// Tests for <SpecID>` (`KWL-TEST-P8M4L`).
+- Documentation in English, Markdown, spec-driven (`docs/specs/`); requirements declare `Scope` (`KWL-ARCH-J2K9Q`), tests declare `// Tests for <SpecID>` (`KWL-TEST-P8M4L`).
 - Quality gates: `gofmt -l .`, `go vet ./...`, `go test ./...` in each Go repo; per-kind `kiw build` / `kiw build --plan` spot-checks.
 - Cross-repo testing via `go.work` workspace (`./framework`, `./libs`, etc.) at hub root; `go work sync` updates `go.work.sum`.
