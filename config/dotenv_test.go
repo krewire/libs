@@ -1,5 +1,5 @@
-// Tests for KWN-Q7X4M
-package cfg
+// Tests for KWL-2X1QZ
+package config
 
 import (
 	"os"
@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-// Spec: KWN-Q7X4M KWL-DOTV-002 Scope: Package
-func TestKWL_DOTV_002_ParseDotEnv_ToleratesCommentsQuotesAndExport(t *testing.T) {
+// Spec: KWL-2X1QZ CFG-DOTV-002 Scope: Package
+func TestCFG_DOTV_002_ParseDotEnv_ToleratesCommentsQuotesAndExport(t *testing.T) {
 	body := `# comment line
 
 PLAIN=value
@@ -24,7 +24,7 @@ UNQUOTED_COMMENTED=abc # trailing comment
 	}
 	got := map[string]string{}
 	for _, kv := range pairs {
-		got[kv.key] = kv.value
+		got[kv.Key] = kv.Value
 	}
 	want := map[string]string{
 		"PLAIN":              "value",
@@ -40,8 +40,8 @@ UNQUOTED_COMMENTED=abc # trailing comment
 	}
 }
 
-// Spec: KWN-Q7X4M KWL-DOTV-001 KWL-DOTV-002 Scope: Package
-func TestKWL_DOTV_001_LoadDotEnv_SetsMissingKeepsExistingAndToleratesAbsentFile(t *testing.T) {
+// Spec: KWL-2X1QZ CFG-DOTV-001 CFG-DOTV-002 Scope: Package
+func TestCFG_DOTV_001_LoadDotEnv_SetsMissingKeepsExistingAndToleratesAbsentFile(t *testing.T) {
 	t.Setenv("EXISTING", "from-shell")
 	t.Setenv("SET_BY_FILE", "")
 	dir := t.TempDir()
@@ -70,27 +70,13 @@ func TestKWL_DOTV_001_LoadDotEnv_SetsMissingKeepsExistingAndToleratesAbsentFile(
 	}
 }
 
-// Spec: KWN-Q7X4M KWL-DOTV-003 Scope: Package
-func TestKWL_DOTV_003_ParseDotEnv_MalformedLineErrorsWithLineNumber(t *testing.T) {
+// Spec: KWL-2X1QZ CFG-DOTV-003 Scope: Package
+func TestCFG_DOTV_003_ParseDotEnv_MalformedLineErrorsWithLineNumber(t *testing.T) {
 	_, err := ParseDotEnv([]byte("GOOD=1\nnot-a-pair\n"))
 	if err == nil {
 		t.Fatal("ParseDotEnv(malformed) = nil error, want error")
 	}
 	if !strings.Contains(err.Error(), "line 2") {
 		t.Errorf("error %q should name the offending line number 2", err.Error())
-	}
-}
-
-// Spec: KWN-Q7X4M KWL-CFGV-004 Scope: Package
-func TestKWL_CFGV_004_GetOr_ReturnsFallbackWhenAbsentOrEmpty(t *testing.T) {
-	c := Config{"A": "x", "B": ""}
-	if got := c.GetOr("A", "d"); got != "x" {
-		t.Errorf("GetOr(A) = %q, want x", got)
-	}
-	if got := c.GetOr("B", "d"); got != "d" {
-		t.Errorf("GetOr(B empty) = %q, want fallback d", got)
-	}
-	if got := c.GetOr("C", "d"); got != "d" {
-		t.Errorf("GetOr(C absent) = %q, want fallback d", got)
 	}
 }

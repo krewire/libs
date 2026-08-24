@@ -23,6 +23,10 @@ by environment variables via `env` tags, with a fixed precedence. It never
 imports `framework` or `net/http`, so any Go program in the ecosystem can use
 it.
 
+The package also hosts the ecosystem's flat key-value store (`Vars`) and
+`.env` loading primitives, absorbing the former `libs/cfg` package so that
+configuration resolution has exactly one home.
+
 ## 2. Problem Statement
 
 Configuration in the Krewire ecosystem is duplicated and inconsistent:
@@ -91,6 +95,23 @@ drift out of sync with documentation. `config` removes that duplication.
 | CFG-OR-001  | Provide `config.LoadOrDefault(path, dst) error` used by tooling that tolerates absent files. | Must |
 | CFG-OR-002  | Every loading rule has an `*_test.go` verifying binding, precedence, and error paths. | Must |
 
+### 5.5 Flat Variables & Dotenv
+
+Absorbed from the former `libs/cfg` package; requirement IDs continue the
+scheme introduced by KWN-Q7X4M (`KWL-DOTV-*` → `CFG-DOTV-*`,
+`KWL-CFGV-004` → `CFG-KV-005`).
+
+| ID          | Requirement                                                       | Priority |
+| ----------- | ----------------------------------------------------------------- | -------- |
+| CFG-KV-001  | Provide `Vars`, a flat `map[string]string` store with dot-notation keys, and `Get`, `Set`, `Delete`, `Keys` accessors. | Must |
+| CFG-KV-002  | Provide `LoadVars(path string) (Vars, error)` flattening a YAML document into dot-notation keys; a missing file yields an empty `Vars` and nil error; a malformed file yields a wrapped error naming the path. | Must |
+| CFG-KV-003  | Provide `(Vars).Save(path)` writing the map back as nested YAML, creating parent directories. | Must |
+| CFG-KV-004  | Provide `(Vars).Merge`, `(Vars).WithDefaults`, and `(Vars).EnvOverride(prefix)` combining sources with later sources winning. | Must |
+| CFG-KV-005  | Provide `(Vars).GetOr(key, fallback)` returning the stored value when present and non-empty, otherwise the fallback. | Must |
+| CFG-DOTV-001 | Provide `LoadDotEnv(path)` exporting `KEY=VALUE` pairs into the process environment without overwriting already-set variables; a missing file is not an error. | Must |
+| CFG-DOTV-002 | Provide `ParseDotEnv(data []byte) ([]DotEnvPair, error)` tolerating comments (`#`), blanks, optional `export ` prefixes, and single/double-quoted values. | Must |
+| CFG-DOTV-003 | A malformed non-comment `.env` line returns an error naming the line number. | Must |
+
 ## 6. Non-Functional Requirements
 
 - NFR1 — **Memory safety.** The `unsafe` package must not be used.
@@ -113,7 +134,8 @@ drift out of sync with documentation. `config` removes that duplication.
 | --------- | ----------------------------------------------- |
 | [KWL-M1ZKS](https://github.com/krewire/libs/blob/main/docs/specs/KWL-CORE-M1ZKS-krewire-libraries.md) | Krewire Libraries — Initial Specification |
 | [KWL-LHANF](./KWL-VALIDATE-LHANF-struct-validation.md) | Struct Validation |
-| [KWN-6K41E](https://github.com/krewire/krewire/blob/main/docs/specs/KWN-RUN-6K41E-krewire-run-dev-deploy.md) | krewire run/dev/deploy (consumer) |
+| [KWN-Q7X4M](https://github.com/krewire/kiw/blob/main/docs/specs/KWN-CONF-Q7X4M-config-directory-and-dotenv.md) | Config Directory & Dotenv (consumer of `LoadDotEnv`/`Vars`) |
+| [KWN-6K41E](https://github.com/krewire/kiw/blob/main/docs/specs/KWN-RUN-6K41E-krewire-run-dev-deploy.md) | krewire run/dev/deploy (consumer) |
 
 ## 9. References
 
