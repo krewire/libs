@@ -4,6 +4,7 @@
 package log
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
@@ -31,4 +32,29 @@ func Install(env core.Env, debug bool) *slog.Logger {
 	l := Setup(env, debug)
 	slog.SetDefault(l)
 	return l
+}
+
+// ErrAttrs converts the diagnostic attributes attached to err into slog
+// attributes so structured context travels from the error into log records
+// (KWL-P8W2N KWL-ERRV-008).
+func ErrAttrs(err error) []slog.Attr {
+	as := core.AttrsOf(err)
+	out := make([]slog.Attr, 0, len(as)+1)
+	for _, a := range as {
+		out = append(out, slog.Any(a.Key, a.Value))
+	}
+	return out
+}
+
+// LogError logs msg at Error level with the error's message plus any attached
+// attrs and nearest hint as structured fields.
+func LogError(l *slog.Logger, msg string, err error) {
+	if l == nil {
+		l = slog.Default()
+	}
+	attrs := append(ErrAttrs(err), slog.String("error", err.Error()))
+	if hint := core.HintOf(err); hint != "" {
+		attrs = append(attrs, slog.String("hint", hint))
+	}
+	l.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
 }

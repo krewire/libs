@@ -35,6 +35,11 @@ ships without recovery or request logging enabled by default.
   leaks internals to clients; request logging ships enabled.
 - G4 — The devtool adopts the same logger and surfaces attached stacks on
   failure when debugging.
+- G5 — User-facing failures can carry one actionable hint ("run `kiw init`",
+  "check `project.kind`") rendered by every Krewire entry point, closing part
+  of Go's terse-error weakness at the ecosystem layer.
+- G6 — A client-visible correlation id links an error response to its server
+  log line, so support sessions start from evidence instead of guesswork.
 
 ## 4. Non-Goals
 
@@ -56,6 +61,10 @@ ships without recovery or request logging enabled by default.
 | KWF-HTTPV-005| `RecoverMiddleware` logs the panic value together with a captured goroutine stack; clients receive a 500 without internals. | Must | Package |
 | KWF-HTTPV-006| `App` attaches recovery and access-log middleware by default; explicit `Use` composes outside them. | Must     | Package  |
 | KWL-DIAGV-007| `bootRuntime` installs the environment-appropriate default logger; the devtool prints extracted stacks on failure when debug is on. | Must | Domain   |
+| KWL-ERRV-008 | `core.WithAttrs(err, attrs...)` attaches structured key/value pairs to an error without altering its message or `errors.Is/As` behavior; `core.AttrsOf(err)` extracts them in order. Attrs flow into `slog` records when logged through `libs/log`. | Must | Package |
+| KWL-ERRV-009 | `core.Error` gains an optional hint; `core.WithHint(err, text)` attaches one to any error and `core.HintOf(err)` returns the nearest hint through the wrap chain. Hints are actionable next steps, never internal detail. | Must | Package |
+| KWL-ERRV-010 | `core.FormatTree(err)` renders a human error tree: message chain top-down, each link annotated with its creation file:line when available, attrs inline, nearest hint as footer. The devtool's failure path prints this tree by default; `--debug` appends full `FormatStack` output. | Must | Package |
+| KWF-HTTPV-011| Error responses (including recovered panics) carry a short correlation id in the body; recovery and error logs log the same id beside the stack, so one id links client report to server trace. | Must | Package |
 
 ## 6. Non-Functional Requirements
 
@@ -71,6 +80,11 @@ ships without recovery or request logging enabled by default.
 - S2 — `kiw run --debug` on a failing project logs at Debug with source
   references; without `--debug` nothing below Info appears.
 - S3 — `errors.Is(wrapped, target)` remains true through `WithStack`.
+- S4 — A scaffolded project missing `krewire.yaml` fails with a tree whose
+  footer reads a hint like "run `kiw init` to create one" — without debug
+  flags and without reading source.
+- S5 — A panicking route returns HTTP 500 whose body contains the same
+  correlation id that appears in the server log line holding the panic stack.
 
 ## 8. Related Specifications
 

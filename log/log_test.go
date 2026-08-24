@@ -43,3 +43,23 @@ func TestKWL_LOGV_004_JSONHandler_StructuredRecord(t *testing.T) {
 		t.Errorf("record fields = %v", m)
 	}
 }
+
+// Spec: KWL-P8W2N KWL-ERRV-008 Scope: Package
+func TestKWL_ERRV_008_LogError_CarriesAttrsAndHintIntoRecord(t *testing.T) {
+	var buf bytes.Buffer
+	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	err := core.WithHint(
+		core.WithAttrs(core.FailureError("cannot read config"), core.Attr{Key: "file", Value: "krewire.yaml"}),
+		"run 'kiw init' to create one",
+	)
+	LogError(l, "build failed", err)
+
+	var m map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &m); err != nil {
+		t.Fatalf("record is not JSON: %v", err)
+	}
+	if m["error"] != "cannot read config" || m["file"] != "krewire.yaml" || m["hint"] != "run 'kiw init' to create one" {
+		t.Errorf("record fields = %v", m)
+	}
+}
