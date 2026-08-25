@@ -17,6 +17,7 @@ Ordered by **impact-to-effort** (high impact, low effort first) and **dependency
 | [KWL-R934Y](./KWL-TERM-R934Y-terminal-io-rendering.md) | Terminal I/O & Rendering | Draft | KWL-M1ZKS |
 | [KWL-K4T7W](./KWL-ENV-K4T7W-environments-and-debug-mode.md) | Environments & Debug Mode | Draft | KWL-M1ZKS, KWL-W0J2X, KWL-2X1QZ |
 | [KWL-P8W2N](./KWL-ERR-P8W2N-error-handling-stack-traces-and-logging.md) | Error Handling, Stack Traces & Structured Logging | Draft | KWL-M1ZKS, KWL-W0J2X, KWL-K4T7W |
+| [KWL-Q3N8P](./KWL-MARKDOWN-Q3N8P-shared-markdown-renderer.md) | Shared Markdown Renderer (Goldmark) | Draft | KWL-M1ZKS, KWF-PT8OD, KWM-FX9H2 |
 
 ## Conventions
 
