@@ -3,25 +3,13 @@ package sec
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/krewire/libs/auth"
 )
-
-// HTTPError is a structured HTTP error with status, code, and message.
-type HTTPError struct {
-	Status  int
-	Code    string
-	Message string
-}
-
-func (e *HTTPError) Error() string {
-	if e.Message != "" {
-		return e.Message
-	}
-	return http.StatusText(e.Status)
-}
 
 // Error writes the HTTPError as JSON or plain text via http.Error.
 func Error(w http.ResponseWriter, err error) {
-	if he, ok := err.(*HTTPError); ok {
+	if he, ok := err.(*auth.HTTPError); ok {
 		http.Error(w, he.Message, he.Status)
 		return
 	}
