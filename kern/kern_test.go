@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/krewire/libs/core"
+	"github.com/krewire/libs/vein"
 )
 
 type testModule struct {
@@ -45,9 +46,9 @@ func TestKernelBootAndExecute(t *testing.T) {
 	k, _ := New(core.Project{Name: "demo", Kind: core.KindApp})
 	called := false
 	k.Use(testModule{name: "mod", init: func(k *Kernel) error {
-		k.RegisterHandler(core.KindApp, func(ctx context.Context, w core.Workload) core.ExitCode {
+		k.RegisterHandler(core.KindApp, func(ctx context.Context, w core.Workload) vein.ExitCode {
 			called = true
-			return core.ExitCodeSuccess
+			return vein.ExitCodeSuccess
 		})
 		return nil
 	}})
@@ -56,12 +57,12 @@ func TestKernelBootAndExecute(t *testing.T) {
 	}
 	w, _ := core.WorkloadFor(core.KindApp)
 	code := k.Execute(context.Background(), w)
-	if code != core.ExitCodeSuccess || !called {
+	if code != vein.ExitCodeSuccess || !called {
 		t.Errorf("Execute = %v called=%v, want success true", code, called)
 	}
 	// Unknown workload
 	unknown := core.Workload{Kind: "unknown"}
-	if code := k.Execute(context.Background(), unknown); code != core.ExitCodeUsage {
+	if code := k.Execute(context.Background(), unknown); code != vein.ExitCodeUsage {
 		t.Errorf("Execute unknown = %v, want Usage", code)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/krewire/libs/core"
+	"github.com/krewire/libs/vein"
 )
 
 // Kernel is the central executor for the Krewire ecosystem.
@@ -48,7 +49,7 @@ func (k *Kernel) Use(modules ...Module) *Kernel {
 }
 
 // RegisterHandler registers a workload handler for the given kind.
-func (k *Kernel) RegisterHandler(kind core.Kind, fn func(context.Context, core.Workload) core.ExitCode) {
+func (k *Kernel) RegisterHandler(kind core.Kind, fn func(context.Context, core.Workload) vein.ExitCode) {
 	k.exec.Register(kind, fn)
 }
 
@@ -56,17 +57,17 @@ func (k *Kernel) RegisterHandler(kind core.Kind, fn func(context.Context, core.W
 func (k *Kernel) Boot(ctx context.Context) error {
 	for _, m := range k.Registry.Ordered() {
 		if err := m.Init(k); err != nil {
-			if _, ok := err.(*core.Error); ok {
+			if _, ok := err.(*vein.Error); ok {
 				return err
 			}
-			return core.FailureError(err.Error())
+			return vein.FailureError(err.Error())
 		}
 	}
 	return nil
 }
 
 // Execute dispatches the workload via the registered handler.
-func (k *Kernel) Execute(ctx context.Context, workload core.Workload) core.ExitCode {
+func (k *Kernel) Execute(ctx context.Context, workload core.Workload) vein.ExitCode {
 	return k.Executor.Execute(ctx, workload)
 }
 

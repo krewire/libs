@@ -15,7 +15,7 @@ Krewire is spec-driven: every initiative starts as a spec in `internal/docs/spec
 
 This spec formalizes **spec-driven testing**: the discipline that every `Must`/`Should` requirement has one or more named tests, that test names and file locations encode spec and scope, and that `kiw test` (and CI) can report coverage per spec.
 
-It consumes `KWL-ARCH-J2K9Q` scope levels (Workspace → Module → Domain → Package → Service/Func) to place tests at the correct level, and extends `KWN-P0FWA` (Project Validation) which currently only runs `go test ./...`.
+It consumes `KWL-ARCH-J2K9Q` scope levels (Workspace → Module → Domain → Service → Unit) to place tests at the correct level, and extends `KWN-P0FWA` (Project Validation) which currently only runs `go test ./...`.
 
 ## 2. Problem Statement
 
@@ -45,8 +45,8 @@ It consumes `KWL-ARCH-J2K9Q` scope levels (Workspace → Module → Domain → P
 
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
-| KWL-TST-001 | For each spec, create a test file `*_test.go` in the package that implements the spec's scope (e.g., `KWL-ARCH-J2K9Q` scope `Package` → `libs/core/scope_test.go`). | Must |
-| KWL-TST-002 | Each requirement `XXX-999` gets at least one test function whose name contains the requirement ID, e.g. `func TestKWL_SCP_001_ParseScope_Valid(t *testing.T)` or `func Test_SCP_001(t *testing.T)` with a leading comment `// Spec: KWL-ARCH-J2K9Q KWL-SCP-001 Scope: Package`. Table-driven subtests may cover multiple requirements but top-level function must name the primary. | Must |
+| KWL-TST-001 | For each spec, create a test file `*_test.go` in the package that implements the spec's scope (e.g., `KWL-ARCH-J2K9Q` scope `Unit` → `libs/core/scope_test.go`). | Must |
+| KWL-TST-002 | Each requirement `XXX-999` gets at least one test function whose name contains the requirement ID, e.g. `func TestKWL_SCP_001_ParseScope_Valid(t *testing.T)` or `func Test_SCP_001(t *testing.T)` with a leading comment `// Spec: KWL-ARCH-J2K9Q KWL-SCP-001 Scope: Unit`. Table-driven subtests may cover multiple requirements but top-level function must name the primary. | Must |
 | KWL-TST-003 | Test file header must list the SpecID(s) it covers: `// Tests for KWL-ARCH-J2K9Q, KWL-TEST-P8M4L` (one line). `go vet` does not check; `spec-lint` may. | Should |
 | KWL-TST-004 | If a `Should` requirement has no test, add `// N/A: <reason>` next to the requirement row in the spec or a `// TODO(KWL-TST):` in code, so audit can distinguish intentional gap from oversight. | Should |
 | KWL-TST-005 | Workspace-scope requirements (e.g., `kiw new` workflow) are tested via `internal/commands` integration tests or `scaffold` tests that exercise the CLI, not via unit tests alone. | Must |
@@ -56,7 +56,7 @@ It consumes `KWL-ARCH-J2K9Q` scope levels (Workspace → Module → Domain → P
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
 | KWL-TST-010 | Test function naming: `Test<SpecCode>_<ReqID>_<Scenario>` where `SpecCode` is the last 5-char code (e.g., `J2K9Q`) or full `KWL_ARCH_J2K9Q`, `ReqID` is `SCP_001` etc., `Scenario` is `Valid`/`Invalid`/`Kernel` etc. Existing `TestNewCreatesKernel` is allowed but new tests for new specs must use the spec-tagged form. | Should |
-| KWL-TST-011 | Scope-driven placement: Workspace → `krewire/internal/commands` or `guild` tests; Module → `go.mod` root / repo root; Domain → `internal/<domain>/` (e.g. `internal/catalog/`); Package → same package as code; Service/Func → `service/` or `cmd/<service>/` tests. | Must |
+| KWL-TST-011 | Scope-driven placement: Workspace → `kiw/internal/commands` or `guild` tests; Module → `go.mod` root / repo root; Domain → `internal/<domain>/` (e.g. `internal/catalog/`); Service → `service/` or `cmd/<service>/` tests; Unit → same package as code (`package.Func`). | Must |
 | KWL-TST-012 | Shared helpers for spec-driven tests live in `*_test.go` in the same package; no `testutil` package unless cross-package reuse is proven. | Should |
 
 ### 5.3 Execution & Reporting

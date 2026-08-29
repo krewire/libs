@@ -3,7 +3,7 @@
 | Field  | Value                              |
 | ------ | ---------------------------------- |
 | SpecID | KWL-ARCH-J2K9Q                     |
-| Title  | Ecosystem Scope Levels — Workspace → Module → Domain → Package → Service → Func |
+| Title  | Ecosystem Scope Levels — Workspace → Module → Domain → Service → Unit |
 | Status | Draft                              |
 | Date   | 2026-08-22                         |
 | Author | Krewire Contributors                |
@@ -11,20 +11,22 @@
 
 ## 1. Context
 
-Krewire is not a single repository but an ecosystem of seven Git repositories plus the developer's local hub. Terminology is currently overloaded: "project" means both a scaffolded user app and an ecosystem repo; "module" means both a Go module and an application module (`internal/catalog`); "service" means both a project kind and a runtime process. Without canonical scope definitions, specs, tests, and agent prompts refer to different levels with the same word, creating traceability gaps.
+Krewire is not a single repository but an ecosystem of Git repositories plus the developer's local hub. Terminology is currently overloaded: "project" means both a scaffolded user app and an ecosystem repo; "module" means both a Go module and an application module (`internal/catalog`); "service" means both a project kind and a runtime process. Without canonical scope definitions, specs, tests, and agent prompts refer to different levels with the same word, creating traceability gaps.
 
-`libs/core` already defines `Kind`/`Workload`/`SpecID`/`Project` (KWL-K1N2Q) and `libs/kern` defines `Kernel`/`Module`/`Registry` (KWL-KERN-X8P3L). This spec establishes the full six-level scope hierarchy (`Workspace → Module → Domain → Package → Service → Func`) that every spec, test, and doc must use, and codifies the containment and naming rules for each level.
+`libs/core` already defines `Kind`/`Workload`/`SpecID`/`Project` (KWL-K1N2Q) and `libs/kern` defines `Kernel`/`Module`/`Registry` (KWL-KERN-X8P3L). This spec establishes the five-level scope hierarchy (`Workspace → Module → Domain → Service → Unit`) that every spec, test, and doc must use, and codifies the containment and naming rules for each level.
+
+Previous version used six levels (`Workspace → Module → Domain → Package → Service → Func`). `Package` and `Func` are collapsed into `Unit` because the architectural boundary that matters is `Service`; everything below a Service is a cohesive code unit (Go package, file, type, or function) with the same visibility and lifecycle. Fewer levels reduce cognitive load without losing granularity.
 
 ## 2. Problem Statement
 
-- No single document defines what "workspace" vs "module" vs "domain" vs "package" vs "service/func" means in Krewire.
-- Specs tag requirements like `FRK-SSG-010` without stating which scope they belong to; reviewers cannot tell if a requirement targets a workspace workflow or a single function.
+- No single document defines what "workspace" vs "module" vs "domain" vs "service" vs "unit" means in Krewire.
+- Specs tag requirements like `FRK-SSG-010` without stating which scope they belong to; reviewers cannot tell if a requirement targets a workspace workflow or a single unit.
 - Tests are named arbitrarily; there is no rule linking a test to its scope, so coverage gaps are invisible.
 - Agents re-map the same project differently because they lack a shared scope vocabulary.
 
 ## 3. Goals
 
-- G1 — Define six canonical scope levels with precise containment, filesystem location, and identity.
+- G1 — Define five canonical scope levels with precise containment, filesystem location, and identity.
 - G2 — Make scope explicit in every spec requirement (`Scope` column) and every test name/path.
 - G3 — Provide a Go type `Scope` in `libs/core` that validates and orders scopes, enabling tooling.
 - G4 — Keep existing `Kind`/`Project` types unchanged; scopes are additive.
@@ -40,67 +42,67 @@ Krewire is not a single repository but an ecosystem of seven Git repositories pl
 
 ### 5.1 Scope Hierarchy & Containment
 
-One workspace contains N modules; one module contains N domains (bounded contexts); one domain contains N packages; one package contains N services/functions.
+One workspace contains N modules; one module contains N domains (bounded contexts); one domain contains N services; one service contains N units.
 
 ```
 Workspace (Krewire Workspace hub, Go go.work at hub root)
   └─ Module (git repo = go.mod root; e.g. github.com/krewire/libs; for Go projects Module is the repo; docs is Module without Go code)
       └─ Domain (DDD bounded context, e.g. internal/catalog/ — cohesive domain set)
-          └─ Package (Go package, e.g. github.com/krewire/framework/ui or internal/catalog/domain; import path = module path + rel dir)
-              └─ Service / Func (Krewire runtime; Service is Go main package cmd/<service>/; Func is inside Package)
+          └─ Service (Krewire runtime deployable; Go main package cmd/<service>/ or service/<name>/; pre-extraction Domain lives inside Module, post-extraction becomes its own Service/Module)
+              └─ Unit (smallest code unit — Go package, file, type, or func; e.g. github.com/krewire/framework/ui, ui.Button)
 ```
 
-> **Go idiom note:** `Module ⊃ Package` per `go.dev/ref/mod` and `go.dev/ref/spec#Packages`.
+> **Go idiom note:** `Module ⊃ Package` per `go.dev/ref/mod` and `go.dev/ref/spec#Packages` — in Krewire terms that is `Module ⊃ Service ⊃ Unit`, where a Unit is typically a Go package or a symbol inside it.
 > `Krewire Workspace` = `Go Workspace` (`go.work` at hub root listing all repos; `go.work.sum` generated by `go work sync`).
-> `Module` is the repo unit for Go projects; `docs` is a `Module` without Go code (book). `Domain` (e.g. `catalog`) has no Go syntax — it is a DDD grouping of Packages pre-extraction, and becomes its own `Service` (and often its own Module) post-extraction per `KWF-5ZHQV`.
-> `Service` is Krewire-specific; in Go it is `package main`.
+> `Module` is the repo unit for Go projects; `docs` is a `Module` without Go code (book). `Domain` (e.g. `catalog`) has no Go syntax — it is a DDD grouping of Services/Units pre-extraction, and becomes its own `Service` (and often its own Module) post-extraction per `KWF-5ZHQV`.
+> `Service` is Krewire-specific; in Go it is `package main`. `Unit` collapses the former `Package`+`Func` distinction.
 
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
-| KWL-SCP-001 | Define `type Scope string` with constants `ScopeWorkspace`, `ScopeModule`, `ScopeDomain`, `ScopePackage`, `ScopeService`, `ScopeFunc` in `libs/core`; `func (Scope) IsValid() bool` and `func ParseScope(string) (Scope, error)` returning `UsageError` on unknown; ordering `Workspace < Module < Domain < Package < Service < Func` via `Less()` or `Level() int`. | Must |
-| KWL-SCP-002 | Document containment: Workspace aggregates Modules; Module aggregates Domains; Domain aggregates Packages (and sub-packages); Package aggregates Services/Funcs. A Module is the repo unit (`go.mod`); a workspace never has a `go.mod` of its own; `docs` is a Module without Go code. | Must |
-| KWL-SCP-003 | Identity rules: Workspace = filesystem path to hub (e.g. `~/Workspace/Dev/krewire`); Module = `go.mod` module path + git remote `github.com/krewire/<name>`; Domain = `internal/<domain>` (e.g. `internal/catalog`); Package = Go import path; Service = `service.Kind` + name or `worker` queue name; Func = `package.Func` qualified name. | Must |
-| KWL-SCP-004 | `AGENTS.md` and `internal/docs/architecture.md` must contain a table of the six levels with columns `Scope | Filesystem | Identity | Example | Spec Tag`. | Must |
+| KWL-SCP-001 | Define `type Scope string` with constants `ScopeWorkspace`, `ScopeModule`, `ScopeDomain`, `ScopeService`, `ScopeUnit` in `libs/core`; `func (Scope) IsValid() bool` and `func ParseScope(string) (Scope, error)` returning `UsageError` on unknown; ordering `Workspace < Module < Domain < Service < Unit` via `Less()` or `Level() int`. | Must |
+| KWL-SCP-002 | Document containment: Workspace aggregates Modules; Module aggregates Domains; Domain aggregates Services; Service aggregates Units. A Module is the repo unit (`go.mod`); a workspace never has a `go.mod` of its own; `docs` is a Module without Go code. | Must |
+| KWL-SCP-003 | Identity rules: Workspace = filesystem path to hub (e.g. `~/Workspace/Dev/krewire`); Module = `go.mod` module path + git remote `github.com/krewire/<name>`; Domain = `internal/<domain>` (e.g. `internal/catalog`); Service = deployable `service.Kind` + name or `worker` queue name (`cmd/<service>/`, `service/<name>`); Unit = Go import path + symbol (`github.com/krewire/framework/ui`, `ui.Button`, `framework/ui.Button`). | Must |
+| KWL-SCP-004 | `AGENTS.md` and `internal/docs/architecture.md` must contain a table of the five levels with columns `Scope | Filesystem | Identity | Example | Spec Tag`. | Must |
 | KWL-SCP-005 | `Project.Validate()` (KWL-K1N2Q) must reject a project whose declared scope is not `ScopeModule`; `libs/kern` `Module` type must map to `ScopeModule`; `Domain` maps to `internal/<domain>` bounded context. | Should |
 
 ### 5.2 Filesystem & Config Mapping
 
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
-| KWL-SCP-010 | Workspace: directory with `bin/kiw` and `go.work` + 7 sub-repos, no `go.mod` at root. Drives `kiw` rebuild (`go build -o ../bin/kiw ./cmd/kiw` inside `krewire/`) and `go work sync`. | Must |
+| KWL-SCP-010 | Workspace: directory with `bin/kiw` and `go.work` + sub-repos, no `go.mod` at root. Drives `kiw` rebuild (`go build -o ../bin/kiw ./cmd/kiw` inside `kiw/`) and `go work sync`. | Must |
 | KWL-SCP-011 | Module: git repo root with `go.mod` (one only, `go list -m` identity) + `krewire.yaml` (one only, `KWL-K1N2Q` invariant) or `manuscript/` (book). For Go projects `Project == Module`; `docs` is Module without Go code. `kiw info` reports kind at this scope. | Must |
 | KWL-SCP-012 | Domain: `internal/<domain>/` bounded context (e.g. `internal/catalog/` with `domain/service/repo` sub-packages). Cohesive domain set; pre-extraction lives inside Module, post-extraction becomes its own Service/Module. | Must |
-| KWL-SCP-013 | Package: directory with `*.go` files and `package <name>`; import path = `module path + "/" + relative dir`. `libs/core` itself is a Package at Domain `core` inside Module `github.com/krewire/libs`. | Must |
-| KWL-SCP-014 | Service/Func: for `service` kind a Service is a process described in `krewire.yaml` `service:` and implemented in `framework/service` or as `main` package `cmd/<service>/`; for `app`/`cli`/`worker` a Func is an exported function/handler (`func HandleX`). | Must |
+| KWL-SCP-013 | Service: directory with `package main` or `krewire.yaml` `service:` / `worker:` declaration; runnable deployable (`go build .` or `kiw run`). `libs/core` Service boundary maps to a Krewire workload (`app`/`service`/`worker`). | Must |
+| KWL-SCP-014 | Unit: smallest code unit inside a Service — a Go package (`framework/ui`), file, type, or exported func/handler (`ui.Button`, `func HandleX`). Replaces former `Package` + `Func` levels; one Unit = one reason to change (SRP). | Must |
 
 ### 5.3 Spec & Documentation Tagging
 
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
-| KWL-SCP-020 | Every new requirement row in any spec must include a `Scope` value from the six levels (or `All` for cross-cutting). Linter `spec-lint` may enforce. | Must |
-| KWL-SCP-021 | Spec file `Domain` field must use `Scope`-aware prefix: e.g. `Libraries — Core — Scope` or `Framework — Runtime — Scope=Package`. | Should |
+| KWL-SCP-020 | Every new requirement row in any spec must include a `Scope` value from the five levels (or `All` for cross-cutting). Linter `spec-lint` may enforce. | Must |
+| KWL-SCP-021 | Spec file `Domain` field must use `Scope`-aware prefix: e.g. `Libraries — Core — Scope` or `Framework — Runtime — Scope=Unit`. | Should |
 | KWL-SCP-022 | `internal/docs/specs/index.md` implementation matrix must add a `Scope` column (optional for legacy specs, required for specs created after this spec). | Should |
 
 ### 5.4 Module Boundaries (Bridge to KWF-5ZHQV)
 
 | ID          | Requirement | Priority |
 |-------------|-------------|----------|
-| KWL-SCP-030 | An application Package (`internal/catalog`) at Package scope is a candidate for a future Service at Service scope (KWF-5ZHQV extraction). The scope hierarchy makes this explicit: `Package: internal/catalog/domain` (inside `Module: github.com/example/app`) → `Service: catalog` after extraction. | Should |
-| KWL-SCP-031 | Cross-scope imports must respect level: Service (inside Package) may import Package interfaces, Package (inside Module) may import sibling Packages in the same Module, but Module must not import Service. `go vet` or `kiw verify scopes` may check (future). | Should |
+| KWL-SCP-030 | An application Unit (`internal/catalog/domain`) at Unit scope is a candidate for a future Service at Service scope (KWF-5ZHQV extraction). The scope hierarchy makes this explicit: `Unit: internal/catalog/domain` (inside `Module: github.com/example/app`, `Domain: catalog`) → `Service: catalog` after extraction. | Should |
+| KWL-SCP-031 | Cross-scope imports must respect level: Unit (inside Service) may import sibling Units in the same Service/Domain, Service (inside Domain) may import sibling Services via published interfaces, but Module must not import Unit internals. `go vet` or `kiw verify scopes` may check (future). | Should |
 
 ## 6. Non-Functional Requirements
 
 - NFR1 — Stdlib-only for `libs/core` scope types; no new dependencies.
-- NFR2 — Backward compatible: existing specs without `Scope` column remain valid; tooling treats missing scope as `Module`.
+- NFR2 — Backward compatible: existing specs without `Scope` column remain valid; tooling treats missing scope as `Module`. Historical `Package`/`Func` tags are interpreted as `Unit`.
 - NFR3 — `gofmt`/`go vet`/`go test` clean in `libs`.
 - NFR4 — Documentation in English, Markdown, spec-driven.
 
 ## 7. Success Criteria
 
-- S1 — `go doc github.com/krewire/libs/core.Scope` lists 6 constants with `Less()` example; `libs/core` tests cover `ParseScope` including error case returning `ExitCodeUsage`.
-- S2 — `AGENTS.md` and `internal/docs/architecture.md` contain the 6-row scope table with examples `workspace: ~/krewire`, `module: github.com/krewire/libs`, `domain: internal/catalog`, `package: framework/ui`, `service: service/catalog`, `func: ui.Button`.
-- S3 — A new spec added after this spec includes a `Scope` column and passes review; `KWL-TEST-P8M4L` references its scope as `Package`/`Service`.
-- S4 — No existing `go test ./...` in `libs`/`framework`/`krewire` breaks.
+- S1 — `go doc github.com/krewire/libs/core.Scope` lists 5 constants with `Less()` example; `libs/core` tests cover `ParseScope` including error case returning `ExitCodeUsage`.
+- S2 — `AGENTS.md` and `internal/docs/architecture.md` contain the 5-row scope table with examples `workspace: ~/krewire`, `module: github.com/krewire/libs`, `domain: internal/catalog`, `service: service/catalog`, `unit: ui.Button / framework/ui`.
+- S3 — A new spec added after this spec includes a `Scope` column and passes review; `KWL-TEST-P8M4L` references its scope as `Unit`/`Service`.
+- S4 — No existing `go test ./...` in `libs`/`framework`/`kiw` breaks (legacy `Package`/`Func` in old test headers may be migrated opportunistically).
 
 ## 8. Related Specifications
 
@@ -109,7 +111,7 @@ Workspace (Krewire Workspace hub, Go go.work at hub root)
 | [KWL-K1N2Q](./KWL-CORE-K1N2Q-core-business-rules.md) | Core Business Rules & Workload Registry (extends) |
 | [KWL-KERN-X8P3L](./KWL-KERN-X8P3L-kernel-executor.md) | Kernel Executor & Supervisor (maps Module → Service) |
 | [KWF-M8K2Q](../framework/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Framework Vision (source of workload matrix) |
-| [KWF-5ZHQV](../framework/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (Package → Service extraction) |
+| [KWF-5ZHQV](../framework/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (Unit → Service extraction) |
 | [KWL-TEST-P8M4L](./KWL-TEST-P8M4L-spec-driven-testing.md) | Spec-Driven Testing (consumes Scope for test naming) |
 
 ## 9. References
@@ -118,3 +120,4 @@ Workspace (Krewire Workspace hub, Go go.work at hub root)
 - Go packages: https://go.dev/ref/spec#Packages
 - Krewire workspace layout: `README.md` Ecosystem Layout, `AGENTS.md` Workspace section
 - `internal/docs/project-vision.md` workload matrix
+

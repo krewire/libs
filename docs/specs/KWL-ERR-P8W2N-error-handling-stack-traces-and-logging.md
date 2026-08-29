@@ -54,17 +54,17 @@ ships without recovery or request logging enabled by default.
 
 | ID           | Requirement                                                                                     | Priority | Scope    |
 | ------------ | ----------------------------------------------------------------------------------------------- | -------- | -------- |
-| KWL-ERRV-001 | `core.WithStack(err)` captures the calling goroutine's PCs at wrap time; `errors.Is/As` and `Unwrap` pass through unchanged. | Must | Package |
-| KWL-ERRV-002 | `core.StackOf(err)` extracts frames via `errors.As`; nil when absent. `core.FormatStack` renders `func file:line` lines. | Must | Package |
+| KWL-ERRV-001 | `core.WithStack(err)` captures the calling goroutine's PCs at wrap time; `errors.Is/As` and `Unwrap` pass through unchanged. | Must | Unit |
+| KWL-ERRV-002 | `core.StackOf(err)` extracts frames via `errors.As`; nil when absent. `core.FormatStack` renders `func file:line` lines. | Must | Unit |
 | KWL-ERRV-003 | Stacking the same error twice keeps both traces extractable.                                    | Should   | Package  |
-| KWL-LOGV-004 | `logging.Setup(env, debug)` returns a stderr logger: Debug level with source when debug; JSON records in production; text otherwise. | Must | Package |
-| KWF-HTTPV-005| `RecoverMiddleware` logs the panic value together with a captured goroutine stack; clients receive a 500 without internals. | Must | Package |
+| KWL-LOGV-004 | `logging.Setup(env, debug)` returns a stderr logger: Debug level with source when debug; JSON records in production; text otherwise. | Must | Unit |
+| KWF-HTTPV-005| `RecoverMiddleware` logs the panic value together with a captured goroutine stack; clients receive a 500 without internals. | Must | Unit |
 | KWF-HTTPV-006| `App` attaches recovery and access-log middleware by default; explicit `Use` composes outside them. | Must     | Package  |
 | KWL-DIAGV-007| `bootRuntime` installs the environment-appropriate default logger; the devtool prints extracted stacks on failure when debug is on. | Must | Domain   |
-| KWL-ERRV-008 | `core.WithAttrs(err, attrs...)` attaches structured key/value pairs to an error without altering its message or `errors.Is/As` behavior; `core.AttrsOf(err)` extracts them in order. Attrs flow into `slog` records when logged through `libs/log`. | Must | Package |
-| KWL-ERRV-009 | `core.Error` gains an optional hint; `core.WithHint(err, text)` attaches one to any error and `core.HintOf(err)` returns the nearest hint through the wrap chain. Hints are actionable next steps, never internal detail. | Must | Package |
-| KWL-ERRV-010 | `core.FormatTree(err)` renders a human error tree: message chain top-down, each link annotated with its creation file:line when available, attrs inline, nearest hint as footer. The devtool's failure path prints this tree by default; `--debug` appends full `FormatStack` output. | Must | Package |
-| KWF-HTTPV-011| Error responses (including recovered panics) carry a short correlation id in the body; recovery and error logs log the same id beside the stack, so one id links client report to server trace. | Must | Package |
+| KWL-ERRV-008 | `core.WithAttrs(err, attrs...)` attaches structured key/value pairs to an error without altering its message or `errors.Is/As` behavior; `core.AttrsOf(err)` extracts them in order. Attrs flow into `slog` records when logged through `libs/log`. | Must | Unit |
+| KWL-ERRV-009 | `core.Error` gains an optional hint; `core.WithHint(err, text)` attaches one to any error and `core.HintOf(err)` returns the nearest hint through the wrap chain. Hints are actionable next steps, never internal detail. | Must | Unit |
+| KWL-ERRV-010 | `core.FormatTree(err)` renders a human error tree: message chain top-down, each link annotated with its creation file:line when available, attrs inline, nearest hint as footer. The devtool's failure path prints this tree by default; `--debug` appends full `FormatStack` output. | Must | Unit |
+| KWF-HTTPV-011| Error responses (including recovered panics) carry a short correlation id in the body; recovery and error logs log the same id beside the stack, so one id links client report to server trace. | Must | Unit |
 
 ## 6. Non-Functional Requirements
 

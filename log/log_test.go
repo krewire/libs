@@ -7,29 +7,29 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/krewire/libs/core"
+	"github.com/krewire/libs/vein"
 )
 
-// Spec: KWL-P8W2N KWL-LOGV-004 Scope: Package
+// Spec: KWL-P8W2N KWL-LOGV-004 Scope: Unit
 func TestKWL_LOGV_004_Setup_LevelAndFormat(t *testing.T) {
-	if _, ok := Setup(core.EnvLocal, false).Handler().(*slog.TextHandler); !ok {
+	if _, ok := Setup(vein.EnvLocal, false).Handler().(*slog.TextHandler); !ok {
 		t.Error("local handler should be text")
 	}
-	if _, ok := Setup(core.EnvTesting, false).Handler().(*slog.TextHandler); !ok {
+	if _, ok := Setup(vein.EnvTesting, false).Handler().(*slog.TextHandler); !ok {
 		t.Error("testing handler should be text")
 	}
-	if _, ok := Setup(core.EnvProduction, false).Handler().(*slog.JSONHandler); !ok {
+	if _, ok := Setup(vein.EnvProduction, false).Handler().(*slog.JSONHandler); !ok {
 		t.Error("production handler should be JSON")
 	}
-	if Setup(core.EnvLocal, true).Enabled(nil, slog.LevelDebug) != true {
+	if Setup(vein.EnvLocal, true).Enabled(nil, slog.LevelDebug) != true {
 		t.Error("debug logger should enable Debug level")
 	}
-	if Setup(core.EnvProduction, false).Enabled(nil, slog.LevelDebug) {
+	if Setup(vein.EnvProduction, false).Enabled(nil, slog.LevelDebug) {
 		t.Error("production without debug should not enable Debug level")
 	}
 }
 
-// Spec: KWL-P8W2N KWL-LOGV-004 Scope: Package
+// Spec: KWL-P8W2N KWL-LOGV-004 Scope: Unit
 func TestKWL_LOGV_004_JSONHandler_StructuredRecord(t *testing.T) {
 	var buf bytes.Buffer
 	rec := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -44,13 +44,13 @@ func TestKWL_LOGV_004_JSONHandler_StructuredRecord(t *testing.T) {
 	}
 }
 
-// Spec: KWL-P8W2N KWL-ERRV-008 Scope: Package
+// Spec: KWL-P8W2N KWL-ERRV-008 Scope: Unit
 func TestKWL_ERRV_008_LogError_CarriesAttrsAndHintIntoRecord(t *testing.T) {
 	var buf bytes.Buffer
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	err := core.WithHint(
-		core.WithAttrs(core.FailureError("cannot read config"), core.Attr{Key: "file", Value: "krewire.yaml"}),
+	err := vein.WithHint(
+		vein.WithAttrs(vein.FailureError("cannot read config"), vein.Attr{Key: "file", Value: "krewire.yaml"}),
 		"run 'kiw init' to create one",
 	)
 	LogError(l, "build failed", err)

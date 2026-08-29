@@ -6,47 +6,46 @@ import (
 )
 
 // Scope is the ecosystem level a spec, test, or doc targets.
-// Ordered: Workspace < Module < Domain < Package < Service < Func.
+// Ordered: Workspace < Module < Domain < Service < Unit.
 // See KWL-ARCH-J2K9Q.
 //
-// Workspace is the Krewire Workspace (hub dir ~/Workspace/Dev/krewire with bin/kiw + 7 repos),
+// Workspace is the Krewire Workspace (hub dir ~/Workspace/Dev/krewire with bin/kiw + repos),
 // which is also the Go `go.work` workspace at the hub root (see `go.work` and `AGENTS.md`).
-// Domain is a DDD bounded context (e.g. catalog, user) — a cohesive set of Packages
-// inside a Module (internal/<domain>/). Pre-extraction it is Package set, post-extraction
-// it becomes its own Service (and often its own Module/Project).
+// Domain is a DDD bounded context (e.g. catalog, user) — a cohesive set of Services
+// inside a Module (internal/<domain>/). Pre-extraction it is a Service set, post-extraction
+// it becomes its own Module/Project.
 // Service is a Krewire runtime deployable, implemented in Go as a main package
-// (e.g. cmd/<service>/ or service/<name>/); Func is inside Package.
+// (e.g. cmd/<service>/ or service/<name>/); Unit is the smallest code unit inside
+// a Service — a Go package, file, type, or function (e.g. framework/ui, ui.Button).
 type Scope string
 
 const (
 	ScopeWorkspace Scope = "Workspace"
 	ScopeModule    Scope = "Module"
 	ScopeDomain    Scope = "Domain"
-	ScopePackage   Scope = "Package"
 	ScopeService   Scope = "Service"
-	ScopeFunc      Scope = "Func"
+	ScopeUnit      Scope = "Unit"
 )
 
 // AllScopes lists every valid Scope in canonical order.
-var AllScopes = []Scope{ScopeWorkspace, ScopeModule, ScopeDomain, ScopePackage, ScopeService, ScopeFunc}
+var AllScopes = []Scope{ScopeWorkspace, ScopeModule, ScopeDomain, ScopeService, ScopeUnit}
 
 // scopeLevel maps Scope to its ordering index.
 var scopeLevel = map[Scope]int{
 	ScopeWorkspace: 0,
 	ScopeModule:    1,
 	ScopeDomain:    2,
-	ScopePackage:   3,
-	ScopeService:   4,
-	ScopeFunc:      5,
+	ScopeService:   3,
+	ScopeUnit:      4,
 }
 
-// IsValid reports whether s is one of the six known scopes.
+// IsValid reports whether s is one of the five known scopes.
 func (s Scope) IsValid() bool {
 	_, ok := scopeLevel[s]
 	return ok
 }
 
-// Level returns the ordering index (0..5). Invalid scopes return -1.
+// Level returns the ordering index (0..4). Invalid scopes return -1.
 func (s Scope) Level() int {
 	if v, ok := scopeLevel[s]; ok {
 		return v
@@ -60,8 +59,9 @@ func (s Scope) Less(other Scope) bool {
 }
 
 // ParseScope parses s as a Scope, case-insensitive, returning UsageError on unknown.
-// Accepted forms are the canonical names (Workspace, Module, Domain, Package, Service, Func),
+// Accepted forms are the canonical names (Workspace, Module, Domain, Service, Unit),
 // case-insensitive, with surrounding whitespace trimmed.
+// "Package" and "Func" are no longer valid scopes — use Unit.
 // "Project" is no longer a valid scope — use Module (Go module, formerly Project==Module).
 func ParseScope(s string) (Scope, error) {
 	trim := strings.TrimSpace(s)
@@ -73,13 +73,11 @@ func ParseScope(s string) (Scope, error) {
 		return ScopeModule, nil
 	case "domain":
 		return ScopeDomain, nil
-	case "package":
-		return ScopePackage, nil
 	case "service":
 		return ScopeService, nil
-	case "func":
-		return ScopeFunc, nil
+	case "unit":
+		return ScopeUnit, nil
 	default:
-		return "", UsageError(fmt.Sprintf("unknown scope %q: want one of Workspace, Module, Domain, Package, Service, Func", s))
+		return "", UsageError(fmt.Sprintf("unknown scope %q: want one of Workspace, Module, Domain, Service, Unit", s))
 	}
 }

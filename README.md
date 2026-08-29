@@ -14,7 +14,9 @@ Each concern is an independent package, versioned and released on its own schedu
 |------|-------------|
 | `core/` | **Business rules & workload registry** — `Kind`/`Workload` matrix, `SpecID`/`RequirementID`, `Project` invariants, `DomainEvent` + shared primitives (`ExitCodeSuccess/Failure/Usage`). Declarative control plane (`KWL-K1N2Q`). |
 | `kern/` | **Kernel executor & supervisor** — generic `Kernel`/`Module`/`Registry`/`Executor`/`Supervisor` for boot, lifecycle, and workload dispatch. Imperative control plane (`KWL-KERN-X8P3L`). |
-| `log/` | Canonical `slog` logger factory — installs the process logger (JSON/text, level) from `core.Env`/debug; bridges error diagnostics into structured attrs. |
+| `vein/` | **Krewire Vein — observability** — logging (`Setup`/`Install`), diagnostics (`Attr`/`Hint`/`FormatTree`), error handling (`ExitCode`/`Error`), stack traces (`WithStack`/`StackOf`). Like Spring Boot Actuator (subproduct). |
+| `sec/` | **Krewire Security — security** — `Identity`, `BasicAuth`, `JWTAuth` (HS256), `SecurityHeaders`, `CSRF`, `Policy`/`PolicySet` (`Require`/`WithRoles`). Like Spring Security (subproduct). |
+| `log/` | Canonical `slog` logger factory — installs the process logger (JSON/text, level) from `core.Env`/debug; bridges error diagnostics into structured attrs. **Deprecated: use `vein`** |
 | `term/` | Terminal I/O, output formatting, and color conventions. |
 | `config/` | Typed `krewire.yaml` loading for all 8 kinds (delegates business validation to `core`). |
 | `validate/` | Struct validation (`validate:"required"` tags) for config and resource schemas. |

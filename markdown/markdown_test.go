@@ -1,4 +1,4 @@
-// Tests for KWL-Q3N8P (KWL-MD-001..003) — Scope: Package libs/markdown.
+// Tests for KWL-Q3N8P (KWL-MD-001..003) — Scope: Unit libs/markdown.
 package markdown
 
 import (

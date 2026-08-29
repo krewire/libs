@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// Spec: KWL-P8W2N KWL-ERRV-001 S3 Scope: Package
+// Spec: KWL-P8W2N KWL-ERRV-001 S3 Scope: Unit
 func TestKWL_ERRV_001_WithStack_PreservesIdentityAndUnwrap(t *testing.T) {
 	target := UsageError("boom")
 	wrapped := WithStack(WithStack(target))
@@ -24,7 +24,7 @@ func TestKWL_ERRV_001_WithStack_PreservesIdentityAndUnwrap(t *testing.T) {
 	}
 }
 
-// Spec: KWL-P8W2N KWL-ERRV-002 Scope: Package
+// Spec: KWL-P8W2N KWL-ERRV-002 Scope: Unit
 func TestKWL_ERRV_002_StackOf_ExtractsFramesAndFormats(t *testing.T) {
 	mk := func() error { return WithStack(UsageError("origin")) }
 	err := mk()
@@ -52,7 +52,7 @@ func TestKWL_ERRV_002_StackOf_ExtractsFramesAndFormats(t *testing.T) {
 	}
 }
 
-// Spec: KWL-P8W2N KWL-ERRV-003 Scope: Package
+// Spec: KWL-P8W2N KWL-ERRV-003 Scope: Unit
 func TestKWL_ERRV_003_DoubleStack_KeepsBothTraces(t *testing.T) {
 	inner := WithStack(UsageError("inner"))
 	outer := WithStack(inner)

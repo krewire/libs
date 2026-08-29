@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// Spec: KWL-2X1QZ CFG-KV-002 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-002 Scope: Unit
 func TestCFG_KV_002_LoadVars_EmptyPathYieldsEmptyVars(t *testing.T) {
 	v, err := LoadVars("")
 	if err != nil {
@@ -18,7 +18,7 @@ func TestCFG_KV_002_LoadVars_EmptyPathYieldsEmptyVars(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-002 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-002 Scope: Unit
 func TestCFG_KV_002_LoadVars_MissingFileYieldsEmptyVars(t *testing.T) {
 	tmpdir := t.TempDir()
 	path := filepath.Join(tmpdir, "nonexistent.yaml")
@@ -31,7 +31,7 @@ func TestCFG_KV_002_LoadVars_MissingFileYieldsEmptyVars(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-002 CFG-KV-003 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-002 CFG-KV-003 Scope: Unit
 func TestCFG_KV_003_SaveRoundTripsThroughNestedYAML(t *testing.T) {
 	tmpdir := t.TempDir()
 	path := filepath.Join(tmpdir, "config.yaml")
@@ -65,7 +65,7 @@ func TestCFG_KV_003_SaveRoundTripsThroughNestedYAML(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-001 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-001 Scope: Unit
 func TestCFG_KV_001_GetSetDelete(t *testing.T) {
 	v := make(Vars)
 	v.Set("key1", "value1")
@@ -78,7 +78,7 @@ func TestCFG_KV_001_GetSetDelete(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-001 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-001 Scope: Unit
 func TestCFG_KV_001_KeysSorted(t *testing.T) {
 	v := Vars{
 		"zebra": "1",
@@ -92,7 +92,7 @@ func TestCFG_KV_001_KeysSorted(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-005 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-005 Scope: Unit
 func TestCFG_KV_005_GetOr_ReturnsFallbackWhenAbsentOrEmpty(t *testing.T) {
 	v := Vars{"A": "x", "B": ""}
 	if got := v.GetOr("A", "d"); got != "x" {
@@ -106,7 +106,7 @@ func TestCFG_KV_005_GetOr_ReturnsFallbackWhenAbsentOrEmpty(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-004 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-004 Scope: Unit
 func TestCFG_KV_004_MergeLaterSourceWins(t *testing.T) {
 	a := Vars{"a": "1", "b": "2"}
 	b := Vars{"b": "new", "c": "3"}
@@ -119,7 +119,7 @@ func TestCFG_KV_004_MergeLaterSourceWins(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-004 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-004 Scope: Unit
 func TestCFG_KV_004_WithDefaultsFillsMissingKeysOnly(t *testing.T) {
 	v := Vars{"existing": "value"}
 	defaults := Vars{"existing": "default", "new": "default"}
@@ -132,7 +132,7 @@ func TestCFG_KV_004_WithDefaultsFillsMissingKeysOnly(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-004 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-004 Scope: Unit
 func TestCFG_KV_004_EnvOverrideMapsPrefixedVarsToDottedKeys(t *testing.T) {
 	os.Setenv("APP_SERVER_PORT", "8080")
 	os.Setenv("APP_DB_HOST", "prod-db")
@@ -149,7 +149,7 @@ func TestCFG_KV_004_EnvOverrideMapsPrefixedVarsToDottedKeys(t *testing.T) {
 	}
 }
 
-// Spec: KWL-2X1QZ CFG-KV-002 CFG-KV-003 Scope: Package
+// Spec: KWL-2X1QZ CFG-KV-002 CFG-KV-003 Scope: Unit
 func TestCFG_KV_002_FlattenUnflattenRoundTrip(t *testing.T) {
 	nested := map[string]any{
 		"server": map[string]any{

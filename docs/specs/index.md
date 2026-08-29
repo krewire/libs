@@ -8,7 +8,7 @@ Ordered by **impact-to-effort** (high impact, low effort first) and **dependency
 | --------- | ------------------------------------------ | ------ | ---------- |
 | [KWL-M1ZKS](./KWL-CORE-M1ZKS-krewire-libraries.md) | Krewire Libraries — Initial Specification | Draft | — |
 | [KWL-K1N2Q](./KWL-CORE-K1N2Q-core-business-rules.md) | Core Business Rules & Workload Registry | Draft | KWL-M1ZKS, KWL-W0J2X |
-| [KWL-ARCH-J2K9Q](./KWL-ARCH-J2K9Q-ecosystem-scope-levels.md) | Ecosystem Scope Levels — Workspace → Module → Domain → Package → Service/Func | Draft | KWL-K1N2Q |
+| [KWL-ARCH-J2K9Q](./KWL-ARCH-J2K9Q-ecosystem-scope-levels.md) | Ecosystem Scope Levels — Workspace → Module → Domain → Service → Unit | Draft | KWL-K1N2Q |
 | [KWL-TEST-P8M4L](./KWL-TEST-P8M4L-spec-driven-testing.md) | Spec-Driven Testing — Requirements → Tests Traceability | Draft | KWL-ARCH-J2K9Q, KWN-P0FWA |
 | [KWL-KERN-X8P3L](./KWL-KERN-X8P3L-kernel-executor.md) | Kernel Executor & Supervisor | Draft | KWL-K1N2Q |
 | [KWL-W0J2X](./KWL-CORE-W0J2X-errors-exit-codes.md) | Core Errors & Exit Codes | Draft | KWL-M1ZKS |

@@ -1,5 +1,4 @@
-// Tests for KWL-P8W2N
-package core
+package vein
 
 import (
 	"errors"
@@ -8,8 +7,7 @@ import (
 	"testing"
 )
 
-// Spec: KWL-P8W2N KWL-ERRV-008 Scope: Unit
-func TestKWL_ERRV_008_WithAttrs_ExtractsThroughWrapsKeepsIdentity(t *testing.T) {
+func TestWithAttrs(t *testing.T) {
 	base := errors.New("disk full")
 	wrapped := WithAttrs(WithStack(WithAttrs(base, Attr{Key: "path", Value: "/tmp/a.yaml"})), Attr{Key: "step", Value: "build"})
 
@@ -36,8 +34,7 @@ func TestKWL_ERRV_008_WithAttrs_ExtractsThroughWrapsKeepsIdentity(t *testing.T) 
 	}
 }
 
-// Spec: KWL-P8W2N KWL-ERRV-009 Scope: Unit
-func TestKWL_ERRV_009_HintOf_ReturnsNearestHintThroughChain(t *testing.T) {
+func TestHintOf(t *testing.T) {
 	base := FailureError("config invalid")
 	deep := WithHint(base, "check project.kind in krewire.yaml")
 	wrapped := WithHint(deep, "run 'kiw init' to create one")
@@ -56,8 +53,7 @@ func TestKWL_ERRV_009_HintOf_ReturnsNearestHintThroughChain(t *testing.T) {
 	}
 }
 
-// Spec: KWL-P8W2N KWL-ERRV-010 Scope: Unit
-func TestKWL_ERRV_010_FormatTree_RendersChainOriginAndHint(t *testing.T) {
+func TestFormatTree(t *testing.T) {
 	inner := errors.New("open krewire.yaml: no such file or directory")
 	err := WithStack(fmt.Errorf("cannot read config: %w",
 		WithHint(
@@ -81,7 +77,6 @@ func TestKWL_ERRV_010_FormatTree_RendersChainOriginAndHint(t *testing.T) {
 		}
 	}
 
-	// A hintless plain error still renders a single-line tree without footer.
 	plain := FormatTree(errors.New("boom"))
 	if !strings.HasPrefix(plain, "Error: boom\n") || strings.Contains(plain, "Hint:") {
 		t.Errorf("plain tree malformed:\n%s", plain)

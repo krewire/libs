@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// Spec: KWL-K4T7W KWL-ENVV-001 Scope: Package
+// Spec: KWL-K4T7W KWL-ENVV-001 Scope: Unit
 func TestKWL_ENVV_001_ParseEnv_KnownValuesAndDefault(t *testing.T) {
 	cases := map[string]Env{
 		"":             EnvLocal,
@@ -29,7 +29,7 @@ func TestKWL_ENVV_001_ParseEnv_KnownValuesAndDefault(t *testing.T) {
 	}
 }
 
-// Spec: KWL-K4T7W KWL-ENVV-002 Scope: Package
+// Spec: KWL-K4T7W KWL-ENVV-002 Scope: Unit
 func TestKWL_ENVV_002_ParseEnv_RejectsUnknownWithUsageError(t *testing.T) {
 	_, err := ParseEnv("staging")
 	if err == nil {
