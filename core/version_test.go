@@ -104,3 +104,45 @@ func TestCheckEcosystemCompatibility(t *testing.T) {
 		t.Error("should fail for missing module")
 	}
 }
+
+func TestCheckCompatibility(t *testing.T) {
+	actual := map[ModuleName]Version{
+		ModuleFramework: MustParseVersion("0.3.1"),
+		ModuleLibs:      MustParseVersion("0.3.0"),
+		ModuleMdbind:    MustParseVersion("0.2.0"),
+	}
+	reqs := map[ModuleName]map[ModuleName]Version{
+		ModuleKiw: {
+			ModuleFramework: MustParseVersion("0.3.1"),
+			ModuleLibs:      MustParseVersion("0.3.0"),
+		},
+		ModuleMdbind: {
+			ModuleLibs: MustParseVersion("0.3.0"),
+		},
+	}
+	if errs := CheckCompatibility(actual, reqs); errs != nil {
+		t.Errorf("CheckCompatibility should succeed, got %v", errs)
+	}
+
+	// Drift: mdbind requires libs >= 0.3.0 but only 0.2.0 is present.
+	driftActual := map[ModuleName]Version{
+		ModuleFramework: MustParseVersion("0.3.1"),
+		ModuleLibs:      MustParseVersion("0.2.0"),
+		ModuleMdbind:    MustParseVersion("0.2.0"),
+	}
+	errs := CheckCompatibility(driftActual, reqs)
+	if len(errs) != 2 {
+		t.Fatalf("CheckCompatibility should report exactly 2 issues (kiw + mdbind require libs), got %d: %v", len(errs), errs)
+	}
+	if _, ok := errs[0].(CompatibilityIssue); !ok {
+		t.Errorf("expected CompatibilityIssue, got %T", errs[0])
+	}
+
+	// Unknown dependency is also reported.
+	unknownReqs := map[ModuleName]map[ModuleName]Version{
+		ModuleKiw: {ModuleGuild: MustParseVersion("0.1.0")},
+	}
+	if errs := CheckCompatibility(actual, unknownReqs); errs == nil {
+		t.Error("CheckCompatibility should report unknown dependency")
+	}
+}

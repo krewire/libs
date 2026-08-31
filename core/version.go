@@ -122,6 +122,7 @@ const (
 	ModuleFramework ModuleName = "framework"
 	ModuleLibs      ModuleName = "libs"
 	ModuleMdbind    ModuleName = "mdbind"
+	ModuleKiw       ModuleName = "kiw"
 	ModuleKrewire   ModuleName = "krewire"
 	ModuleGuild     ModuleName = "guild"
 	ModuleDocs      ModuleName = "docs"
@@ -131,16 +132,63 @@ const (
 )
 
 // CurrentVersion is the libs module's own version. Bump per release.
-var CurrentVersion = MustParseVersion("0.1.0")
+var CurrentVersion = MustParseVersion("0.3.0")
 
 // EcosystemVersions is the known-good compatibility matrix for the current release.
+// It is the blessed, hand-curated release matrix; each module's own
+// `<module>/version.go` (`Version` + `EcosystemRequires`) is the authoritative
+// per-module declaration that `kiw compat` validates against.
 var EcosystemVersions = map[ModuleName]Version{
-	ModuleFramework: MustParseVersion("0.1.0"),
+	ModuleFramework: MustParseVersion("0.3.1"),
 	ModuleLibs:      CurrentVersion,
-	ModuleMdbind:    MustParseVersion("0.1.0"),
-	ModuleKrewire:   MustParseVersion("0.1.0"),
+	ModuleMdbind:    MustParseVersion("0.2.0"),
+	ModuleKiw:       MustParseVersion("0.3.3"),
 	ModuleGuild:     MustParseVersion("0.1.0"),
+	ModuleShip:      MustParseVersion("0.0.0"),
+	ModuleKrewire:   MustParseVersion("0.3.2"),
 	ModuleInternal:  MustParseVersion("0.1.0"),
+}
+
+// CompatibilityIssue describes a single unsatisfied compatibility requirement.
+type CompatibilityIssue struct {
+	// Module is the module that declared the requirement.
+	Module ModuleName
+	// Requires is the dependency whose version was checked.
+	Requires ModuleName
+	// Have is the actual version of the dependency.
+	Have Version
+	// Want is the minimum version required by Module.
+	Want Version
+}
+
+// Error implements the error interface.
+func (i CompatibilityIssue) Error() string {
+	return fmt.Sprintf("module %q requires %q >= %s, but %s found", i.Module, i.Requires, i.Want.String(), i.Have.String())
+}
+
+// CheckCompatibility validates that every declared requirement in reqs is
+// satisfied by the actual module versions in actual. Unlike
+// CheckEcosystemCompatibility it aggregates ALL violations instead of stopping at
+// the first, so a single run reports the full version drift across the repo.
+// It returns nil when every requirement is satisfied.
+func CheckCompatibility(actual map[ModuleName]Version, reqs map[ModuleName]map[ModuleName]Version) []error {
+	var issues []error
+	for mod, deps := range reqs {
+		for dep, want := range deps {
+			have, ok := actual[dep]
+			if !ok {
+				issues = append(issues, FailureError(fmt.Sprintf("module %q requires unknown module %q", mod, dep)))
+				continue
+			}
+			if !have.IsCompatible(want) {
+				issues = append(issues, CompatibilityIssue{Module: mod, Requires: dep, Have: have, Want: want})
+			}
+		}
+	}
+	if len(issues) == 0 {
+		return nil
+	}
+	return issues
 }
 
 // CheckEcosystemCompatibility verifies that actual versions satisfy required versions per IsCompatible.
