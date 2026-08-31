@@ -74,7 +74,7 @@ var Workloads = []Workload{
 	{Kind: KindSite, Package: "framework/web/ssg", Title: "Static sites (SSG)", SpecID: "KWF-PT8OD", Status: StatusShipped},
 	{Kind: KindBook, Package: "mdbind", Title: "Documentation sites", SpecID: "KWM-FX9H2", Status: StatusShipped},
 	{Kind: KindApp, Package: "framework/app", Title: "Fullstack / Monolith", SpecID: "KWF-C4087", Status: StatusShipped},
-	{Kind: KindSite, Package: "framework/runtime", Title: "Frontend (client)", SpecID: "KWF-T4X9P", Status: StatusPlanned},
+	{Kind: KindSite, Package: "framework/runtime", Title: "Frontend (client)", SpecID: "KWF-T4X9P", Status: StatusShipped},
 	{Kind: KindWorker, Package: "framework/worker", Title: "Workers & jobs", SpecID: "KWF-L5H2F", Status: StatusPlanned},
 	{Kind: KindService, Package: "framework/service", Title: "Microservice", SpecID: "KWF-L5H2F", Status: StatusPlanned},
 	{Kind: KindInfra, Package: "framework/infra", Title: "Cloud infrastructure", SpecID: "KWF-B7N3D", Status: StatusPlanned},
