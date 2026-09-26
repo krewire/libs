@@ -18,7 +18,7 @@ func BasicAuth(realm string, verify BasicVerifier) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			scheme, param, ok := authParam(r.Header.Get("Authorization"))
-			if !ok || !strEqFold(scheme, "Basic") {
+			if !ok || !StrEqFold(scheme, "Basic") {
 				challenge401(w, challenge)
 				return
 			}

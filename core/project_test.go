@@ -38,14 +38,14 @@ func TestValidateKrewireYamlPath(t *testing.T) {
 	}
 }
 
-func TestIsOptIn(t *testing.T) {
-	if !IsOptIn(KindApp, []string{"github.com/krewire/framework/tui"}) {
-		t.Error("app importing tui should be opt-in true")
+func TestHasOptInViolation(t *testing.T) {
+	if HasOptInViolation(KindApp, []string{"github.com/krewire/framework/tui"}) {
+		t.Error("app importing tui should not be a violation")
 	}
-	if IsOptIn(KindApp, []string{"github.com/krewire/framework/service"}) {
-		t.Error("app importing service should be opt-in false")
+	if !HasOptInViolation(KindApp, []string{"github.com/krewire/framework/service"}) {
+		t.Error("app importing service should be a violation")
 	}
-	if !IsOptIn(KindService, []string{"github.com/krewire/framework/service"}) {
-		t.Error("service importing service should be true")
+	if HasOptInViolation(KindService, []string{"github.com/krewire/framework/service"}) {
+		t.Error("service importing service should not be a violation")
 	}
 }

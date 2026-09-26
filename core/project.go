@@ -56,21 +56,19 @@ func ValidateKrewireYamlPath(path string) error {
 	return nil
 }
 
-// IsOptIn reports whether importing the given import paths violates opt-in
-// for the declared kind. For example, a KindApp monolith importing
+// HasOptInViolation reports whether importing the given import paths violates
+// opt-in for the declared kind. For example, a KindApp monolith importing
 // framework/service should be flagged.
-func IsOptIn(kind Kind, imported []string) bool {
-	// Only app is expected to be zero-cost; worker/service/infra are opt-in by kind.
+func HasOptInViolation(kind Kind, imported []string) bool {
 	if kind != KindApp {
-		return true
+		return false
 	}
 	for _, imp := range imported {
 		if strings.Contains(imp, "framework/service") || strings.Contains(imp, "framework/infra") || strings.Contains(imp, "framework/worker") && !strings.Contains(imp, "runtime") {
-			// runtime is allowed for app (frontend), but service/infra/worker are opt-in
 			if strings.Contains(imp, "framework/service") || strings.Contains(imp, "framework/infra") {
-				return false
+				return true
 			}
 		}
 	}
-	return true
+	return false
 }

@@ -59,25 +59,15 @@ func (v Version) String() string {
 // Compare returns -1 if v < other, 0 if equal, 1 if v > other per semver precedence.
 // Build metadata is ignored.
 func (v Version) Compare(other Version) int {
-	if v.Major != other.Major {
-		if v.Major < other.Major {
-			return -1
-		}
-		return 1
+	if d := cmpInt(v.Major, other.Major); d != 0 {
+		return d
 	}
-	if v.Minor != other.Minor {
-		if v.Minor < other.Minor {
-			return -1
-		}
-		return 1
+	if d := cmpInt(v.Minor, other.Minor); d != 0 {
+		return d
 	}
-	if v.Patch != other.Patch {
-		if v.Patch < other.Patch {
-			return -1
-		}
-		return 1
+	if d := cmpInt(v.Patch, other.Patch); d != 0 {
+		return d
 	}
-	// Pre-release: absence has higher precedence than presence
 	if v.PreRelease == "" && other.PreRelease != "" {
 		return 1
 	}
@@ -88,6 +78,16 @@ func (v Version) Compare(other Version) int {
 		if v.PreRelease < other.PreRelease {
 			return -1
 		}
+		return 1
+	}
+	return 0
+}
+
+func cmpInt(a, b int) int {
+	if a < b {
+		return -1
+	}
+	if a > b {
 		return 1
 	}
 	return 0
@@ -132,7 +132,7 @@ const (
 )
 
 // CurrentVersion is the libs module's own version. Bump per release.
-var CurrentVersion = MustParseVersion("0.3.0")
+var CurrentVersion = MustParseVersion("0.4.0")
 
 // EcosystemVersions is the known-good compatibility matrix for the current release.
 // It is the blessed, hand-curated release matrix; each module's own

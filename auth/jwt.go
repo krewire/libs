@@ -113,11 +113,11 @@ func JWTAuth(secret []byte, opts ...func(*JWTOptions)) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := ""
 			scheme, param, ok := authParam(r.Header.Get("Authorization"))
-			if ok && strEqFold(scheme, "Bearer") {
-				token = param
-			} else if o.CookieName != "" {
-				token = cookieVal(r, o.CookieName)
-			}
+		if ok && StrEqFold(scheme, "Bearer") {
+			token = param
+		} else if o.CookieName != "" {
+			token = CookieValue(r, o.CookieName)
+		}
 			if token == "" {
 				if o.ContinueOnMissing {
 					next.ServeHTTP(w, r)

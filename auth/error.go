@@ -31,7 +31,8 @@ func Error(w http.ResponseWriter, err error) {
 // Middleware is a standard http middleware.
 type Middleware func(http.Handler) http.Handler
 
-func cookieVal(r *http.Request, name string) string {
+// CookieValue extracts a cookie value by name, returning "" on error.
+func CookieValue(r *http.Request, name string) string {
 	c, err := r.Cookie(name)
 	if err != nil {
 		return ""
@@ -39,7 +40,8 @@ func cookieVal(r *http.Request, name string) string {
 	return c.Value
 }
 
-func lowerASCII(s string) string {
+// LowerASCII lower-cases ASCII letters in-place.
+func LowerASCII(s string) string {
 	b := []byte(s)
 	for i := range b {
 		if b[i] >= 'A' && b[i] <= 'Z' {
@@ -49,15 +51,13 @@ func lowerASCII(s string) string {
 	return string(b)
 }
 
-func strEqFold(a, b string) bool {
+// StrEqFold compares two strings case-insensitively.
+func StrEqFold(a, b string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	// constant-time for auth schemes
-	aa := []byte(lowerASCII(a))
-	bb := []byte(lowerASCII(b))
-	// use subtle.ConstantTimeCompare for security
-	// but for scheme compare, simple is fine
+	aa := []byte(LowerASCII(a))
+	bb := []byte(LowerASCII(b))
 	eq := 1
 	for i := range aa {
 		if aa[i] != bb[i] {
@@ -68,6 +68,7 @@ func strEqFold(a, b string) bool {
 	return eq == 1
 }
 
-func strconvItoa(i int) string {
+// StrconvItoa converts int to string.
+func StrconvItoa(i int) string {
 	return fmt.Sprintf("%d", i)
 }

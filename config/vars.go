@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
+)
+
+const (
+	dirPerm  = 0o755
+	filePerm = 0o644
 )
 
 // Vars is a flat key-value configuration store with dot-notation keys,
@@ -41,7 +47,7 @@ func LoadVars(path string) (Vars, error) {
 // parent directories as needed (KWL-2X1QZ CFG-KV-003).
 func (v Vars) Save(path string) error {
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, dirPerm); err != nil {
 		return fmt.Errorf("config: mkdir %q: %w", dir, err)
 	}
 	nested := unflatten(v)
@@ -49,7 +55,7 @@ func (v Vars) Save(path string) error {
 	if err != nil {
 		return fmt.Errorf("config: marshal: %w", err)
 	}
-	return os.WriteFile(path, data, 0o644)
+	return os.WriteFile(path, data, filePerm)
 }
 
 // Get returns the value for key, or empty string if not found.
@@ -82,14 +88,7 @@ func (v Vars) Keys() []string {
 	for k := range v {
 		keys = append(keys, k)
 	}
-	// Sort for deterministic output
-	for i := 0; i < len(keys); i++ {
-		for j := i + 1; j < len(keys); j++ {
-			if keys[i] > keys[j] {
-				keys[i], keys[j] = keys[j], keys[i]
-			}
-		}
-	}
+	sort.Strings(keys)
 	return keys
 }
 

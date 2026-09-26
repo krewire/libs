@@ -1,7 +1,6 @@
 package sec
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/krewire/libs/auth"
@@ -9,53 +8,28 @@ import (
 
 // Error writes the HTTPError as JSON or plain text via http.Error.
 func Error(w http.ResponseWriter, err error) {
-	if he, ok := err.(*auth.HTTPError); ok {
-		http.Error(w, he.Message, he.Status)
-		return
-	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	auth.Error(w, err)
 }
 
 // Middleware is a standard http middleware.
-type Middleware func(http.Handler) http.Handler
+type Middleware = auth.Middleware
 
+// cookieVal is re-exported from auth for backward compatibility within sec.
 func cookieVal(r *http.Request, name string) string {
-	c, err := r.Cookie(name)
-	if err != nil {
-		return ""
-	}
-	return c.Value
+	return auth.CookieValue(r, name)
 }
 
+// lowerASCII is re-exported from auth for backward compatibility within sec.
 func lowerASCII(s string) string {
-	b := []byte(s)
-	for i := range b {
-		if b[i] >= 'A' && b[i] <= 'Z' {
-			b[i] += 'a' - 'A'
-		}
-	}
-	return string(b)
+	return auth.LowerASCII(s)
 }
 
+// strEqFold is re-exported from auth for backward compatibility within sec.
 func strEqFold(a, b string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	// constant-time for auth schemes
-	aa := []byte(lowerASCII(a))
-	bb := []byte(lowerASCII(b))
-	// use subtle.ConstantTimeCompare for security
-	// but for scheme compare, simple is fine
-	eq := 1
-	for i := range aa {
-		if aa[i] != bb[i] {
-			eq = 0
-			break
-		}
-	}
-	return eq == 1
+	return auth.StrEqFold(a, b)
 }
 
+// strconvItoa is re-exported from auth for backward compatibility within sec.
 func strconvItoa(i int) string {
-	return fmt.Sprintf("%d", i)
+	return auth.StrconvItoa(i)
 }

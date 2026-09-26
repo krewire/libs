@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const stackTraceDepth = 32
+
 // stackError attaches an immutable captured call stack to an error without
 // altering its identity: errors.Is/As keep working through Unwrap
 // (KWL-P8W2N KWL-ERRV-001).
@@ -28,7 +30,7 @@ func WithStack(err error) error {
 	if err == nil {
 		return nil
 	}
-	pcs := make([]uintptr, 32)
+	pcs := make([]uintptr, stackTraceDepth)
 	n := runtime.Callers(2, pcs)
 	return &stackError{err: err, pcs: pcs[:n]}
 }

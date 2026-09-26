@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// DefaultShutdownTimeout is the default context timeout used by Stop.
+const DefaultShutdownTimeout = 10 * time.Second
+
 // Startable is implemented by long-running modules.
 type Startable interface {
 	Start(context.Context) error
@@ -25,7 +28,7 @@ type Supervisor struct {
 func NewSupervisor() *Supervisor {
 	return &Supervisor{
 		health:          make(map[string]error),
-		shutdownTimeout: 10 * time.Second,
+		shutdownTimeout: DefaultShutdownTimeout,
 	}
 }
 
