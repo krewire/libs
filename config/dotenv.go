@@ -1,7 +1,6 @@
 package config
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -41,15 +40,60 @@ func LoadDotEnv(path string) error {
 
 // ParseDotEnv parses .env file content into ordered KEY=VALUE pairs.
 // Blank lines and # comments are skipped; an optional "export " prefix is
-// accepted; values may be wrapped in single or double quotes and unquoted
-// values drop trailing inline comments (KWL-2X1QZ CFG-DOTV-002).
+// accepted; values may be multiline, wrapped in single or double quotes,
+// contain escape sequences (when double-quoted), expand $VAR / ${VAR} variables,
+// and unquoted values drop trailing inline comments (KWL-2X1QZ CFG-DOTV-002).
 func ParseDotEnv(data []byte) ([]DotEnvPair, error) {
 	var pairs []DotEnvPair
-	sc := bufio.NewScanner(strings.NewReader(string(data)))
-	lineNo := 0
-	for sc.Scan() {
-		lineNo++
-		line := strings.TrimSpace(sc.Text())
+	lookup := func(k string) string {
+		for i := len(pairs) - 1; i >= 0; i-- {
+			if pairs[i].Key == k {
+				return pairs[i].Value
+			}
+		}
+		return os.Getenv(k)
+	}
+
+	content := string(data)
+	content = strings.ReplaceAll(content, "\r\n", "\n")
+	lines := strings.Split(content, "\n")
+
+	var inQuote byte
+	var multilineKey string
+	var multilineStartLine int
+	var multilineVal strings.Builder
+
+	for lineIdx, rawLine := range lines {
+		lineNo := lineIdx + 1
+
+		if inQuote != 0 {
+			multilineVal.WriteByte('\n')
+			if inQuote == '\'' {
+				idx := strings.IndexByte(rawLine, '\'')
+				if idx >= 0 {
+					multilineVal.WriteString(rawLine[:idx])
+					pairs = append(pairs, DotEnvPair{Key: multilineKey, Value: multilineVal.String()})
+					inQuote = 0
+					multilineVal.Reset()
+				} else {
+					multilineVal.WriteString(rawLine)
+				}
+			} else { // '"'
+				idx := findClosingDoubleQuote(rawLine)
+				if idx >= 0 {
+					multilineVal.WriteString(rawLine[:idx])
+					val := parseDoubleQuoted(multilineVal.String(), lookup)
+					pairs = append(pairs, DotEnvPair{Key: multilineKey, Value: val})
+					inQuote = 0
+					multilineVal.Reset()
+				} else {
+					multilineVal.WriteString(rawLine)
+				}
+			}
+			continue
+		}
+
+		line := strings.TrimSpace(rawLine)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
@@ -59,28 +103,166 @@ func ParseDotEnv(data []byte) ([]DotEnvPair, error) {
 			return nil, fmt.Errorf("line %d: expected KEY=VALUE", lineNo)
 		}
 		key = strings.TrimSpace(key)
-		value = unquoteDotEnvValue(strings.TrimSpace(value))
 		if key == "" {
 			return nil, fmt.Errorf("line %d: empty key", lineNo)
 		}
-		pairs = append(pairs, DotEnvPair{Key: key, Value: value})
+
+		trimmedVal := strings.TrimSpace(value)
+		if strings.HasPrefix(trimmedVal, "'") {
+			idx := strings.IndexByte(trimmedVal[1:], '\'')
+			if idx >= 0 {
+				val := trimmedVal[1 : 1+idx]
+				pairs = append(pairs, DotEnvPair{Key: key, Value: val})
+			} else {
+				inQuote = '\''
+				multilineKey = key
+				multilineStartLine = lineNo
+				multilineVal.WriteString(trimmedVal[1:])
+			}
+		} else if strings.HasPrefix(trimmedVal, "\"") {
+			idx := findClosingDoubleQuote(trimmedVal[1:])
+			if idx >= 0 {
+				inner := trimmedVal[1 : 1+idx]
+				val := parseDoubleQuoted(inner, lookup)
+				pairs = append(pairs, DotEnvPair{Key: key, Value: val})
+			} else {
+				inQuote = '"'
+				multilineKey = key
+				multilineStartLine = lineNo
+				multilineVal.WriteString(trimmedVal[1:])
+			}
+		} else {
+			if i := strings.Index(trimmedVal, " #"); i >= 0 {
+				trimmedVal = strings.TrimSpace(trimmedVal[:i])
+			}
+			val := expandVariables(trimmedVal, lookup)
+			pairs = append(pairs, DotEnvPair{Key: key, Value: val})
+		}
 	}
-	if err := sc.Err(); err != nil {
-		return nil, err
+
+	if inQuote != 0 {
+		return nil, fmt.Errorf("line %d: unclosed quote", multilineStartLine)
 	}
+
 	return pairs, nil
 }
 
-// unquoteDotEnvValue strips one matching layer of single or double quotes
-// and drops a trailing inline comment outside quotes for unquoted values.
-func unquoteDotEnvValue(v string) string {
-	if len(v) >= 2 {
-		if (v[0] == '"' && v[len(v)-1] == '"') || (v[0] == '\'' && v[len(v)-1] == '\'') {
-			return v[1 : len(v)-1]
+func findClosingDoubleQuote(s string) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\\' {
+			i++
+			continue
+		}
+		if s[i] == '"' {
+			return i
 		}
 	}
-	if i := strings.Index(v, " #"); i >= 0 {
-		v = strings.TrimSpace(v[:i])
+	return -1
+}
+
+func parseDoubleQuoted(s string, lookup func(string) string) string {
+	var sb strings.Builder
+	i := 0
+	for i < len(s) {
+		if s[i] == '\\' && i+1 < len(s) {
+			next := s[i+1]
+			switch next {
+			case 'n':
+				sb.WriteByte('\n')
+				i += 2
+				continue
+			case 'r':
+				sb.WriteByte('\r')
+				i += 2
+				continue
+			case 't':
+				sb.WriteByte('\t')
+				i += 2
+				continue
+			case '"':
+				sb.WriteByte('"')
+				i += 2
+				continue
+			case '\\':
+				sb.WriteByte('\\')
+				i += 2
+				continue
+			case '$':
+				sb.WriteByte('$')
+				i += 2
+				continue
+			default:
+				sb.WriteByte('\\')
+				sb.WriteByte(next)
+				i += 2
+				continue
+			}
+		}
+		if s[i] == '$' && i+1 < len(s) {
+			if s[i+1] == '{' {
+				end := strings.IndexByte(s[i+2:], '}')
+				if end >= 0 {
+					varName := s[i+2 : i+2+end]
+					sb.WriteString(lookup(varName))
+					i = i + 2 + end + 1
+					continue
+				}
+			} else if isVarIdentStart(s[i+1]) {
+				j := i + 1
+				for j < len(s) && isVarIdentPart(s[j]) {
+					j++
+				}
+				varName := s[i+1 : j]
+				sb.WriteString(lookup(varName))
+				i = j
+				continue
+			}
+		}
+		sb.WriteByte(s[i])
+		i++
 	}
-	return v
+	return sb.String()
+}
+
+func expandVariables(s string, lookup func(string) string) string {
+	var sb strings.Builder
+	i := 0
+	for i < len(s) {
+		if s[i] == '\\' && i+1 < len(s) && s[i+1] == '$' {
+			sb.WriteByte('$')
+			i += 2
+			continue
+		}
+		if s[i] == '$' && i+1 < len(s) {
+			if s[i+1] == '{' {
+				end := strings.IndexByte(s[i+2:], '}')
+				if end >= 0 {
+					varName := s[i+2 : i+2+end]
+					sb.WriteString(lookup(varName))
+					i = i + 2 + end + 1
+					continue
+				}
+			} else if isVarIdentStart(s[i+1]) {
+				j := i + 1
+				for j < len(s) && isVarIdentPart(s[j]) {
+					j++
+				}
+				varName := s[i+1 : j]
+				sb.WriteString(lookup(varName))
+				i = j
+				continue
+			}
+		}
+		sb.WriteByte(s[i])
+		i++
+	}
+	return sb.String()
+}
+
+func isVarIdentStart(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func isVarIdentPart(c byte) bool {
+	return isVarIdentStart(c) || (c >= '0' && c <= '9')
 }
