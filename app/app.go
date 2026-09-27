@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/krewire/libs/runner"
 	"github.com/krewire/libs/service"
 )
 
@@ -62,23 +63,11 @@ func Resolve[T any](c *Container, name string) (T, bool) {
 	return resolved, ok
 }
 
-// Runner executes the application-specific runtime after providers are ready.
-// The application does not assume whether the runtime is HTTP, CLI, worker,
-// desktop, or another execution model.
-type Runner interface {
-	Run(context.Context, *Container) error
-}
+// Runner is the runtime contract supplied to Application.Run.
+type Runner = runner.Runner
 
 // RunnerFunc adapts a function into a Runner.
-type RunnerFunc func(context.Context, *Container) error
-
-// Run implements Runner.
-func (f RunnerFunc) Run(ctx context.Context, container *Container) error {
-	if f == nil {
-		return fmt.Errorf("app: nil runner")
-	}
-	return f(ctx, container)
-}
+type RunnerFunc = runner.Func
 
 // Application manages provider registration and lifecycle.
 type Application struct {

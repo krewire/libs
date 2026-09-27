@@ -9,8 +9,8 @@ Import: `github.com/krewire/libs/app`
 ## Main API
 
 - `Application` — provider registration and lifecycle coordination.
-- `Runner` — runtime contract supplied by the caller.
-- `RunnerFunc` — function adapter for simple runtimes.
+- `Runner` — runtime contract supplied by the [`runner`](./runner.md) module.
+- `RunnerFunc` — compatibility alias for `runner.Func`.
 - `New()` — creates an application with an empty container.
 - `Use(providers...)` — registers providers in startup order.
 - `Bootstrap(ctx)` — registers all providers, then starts lifecycle-aware providers.

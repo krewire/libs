@@ -69,7 +69,7 @@ func TestRunExecutesRunnerAndStopsProviders(t *testing.T) {
 		t.Fatal(err)
 	}
 	called := false
-	err := a.Run(context.Background(), RunnerFunc(func(_ context.Context, c *Container) error {
+	err := a.Run(context.Background(), RunnerFunc(func(_ context.Context, c service.Registry) error {
 		called = true
 		if _, ok := c.Get("clock"); !ok {
 			t.Fatal("provider missing from runner")
