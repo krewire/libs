@@ -18,8 +18,8 @@ The repository is a Go monorepo. Each top-level package can be imported independ
 | [`config`](./config) | Typed configuration and environment overlays | `Load`, `LoadOrDefault`, `Override`, `.env` parsing, `Vars` |
 | [`validation`](./validation) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
 | [`fs`](./fs) | Testable filesystem boundary | `FileSystem`, `OS`, `Memory`, `Default`, `Clean` |
-| [`file`](./file) | File-oriented read, write, copy, and atomic replacement | `Read`, `Write`, `WriteAtomic`, `Copy` |
-| [`storage`](./storage) | Backend-independent object storage boundary | `Store`, `Local`, `ObjectInfo` |
+| [`file`](./file) | File-oriented read, write, copy, atomic replacement, and context-aware operations | `Read`, `Write`, `WriteAtomic`, `Copy`, `ReadContext`, `WriteContext` |
+| [`storage`](./storage) | Backend-independent object storage boundary | `Store`, `ContextStore`, `Local`, `NewMemory`, `ObjectInfo` |
 | [`term`](./term) | Terminal detection and ANSI styling | `Terminal`, `NewTerminal`, `Paint`, colors and styles |
 | [`markdown`](./markdown) | Markdown-to-HTML rendering | GFM rendering, heading IDs, base-prefixed links |
 

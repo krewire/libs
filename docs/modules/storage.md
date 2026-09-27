@@ -9,8 +9,10 @@ Import: `github.com/krewire/libs/storage`
 ## Main API
 
 - `Store` — `Put`, `Get`, `Delete`, and `Stat` operations.
+- `ContextStore` — context-aware extension of `Store` without changing the base interface.
 - `Local` — filesystem-backed implementation.
 - `NewLocal(root, filesystem)` — creates a local store.
+- `NewMemory()` — creates an in-memory local store for tests and ephemeral data.
 - `ObjectInfo` — key, size, and mode metadata.
 
 Object keys are resolved below the configured root. Path traversal attempts are rejected.

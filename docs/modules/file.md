@@ -12,6 +12,7 @@ Import: `github.com/krewire/libs/file`
 - `Write(fsys, name, data, perm)` — creates parent directories and replaces a file.
 - `WriteAtomic(fsys, name, data, perm)` — writes beside the destination and renames into place.
 - `Copy(fsys, dst, src, perm)` — copies complete file contents.
+- `ReadContext`, `WriteContext`, `WriteAtomicContext`, `CopyContext` — context-aware variants.
 
 Pass `nil` for `fsys` to use `fs.Default`.
 
