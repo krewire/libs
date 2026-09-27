@@ -22,8 +22,10 @@ func evalBound(isMin bool, arg string, v reflect.Value) (bool, error) {
 		got = float64(v.Uint())
 	case reflect.Float32, reflect.Float64:
 		got = v.Float()
+	case reflect.Slice, reflect.Array, reflect.Map:
+		got = float64(v.Len())
 	default:
-		return false, fmt.Errorf("min/max require a number or string, got %s", v.Kind())
+		return false, fmt.Errorf("min/max require a number, string, slice, map, or array, got %s", v.Kind())
 	}
 	if isMin {
 		return got < want, nil

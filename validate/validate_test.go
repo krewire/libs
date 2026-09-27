@@ -238,3 +238,125 @@ func TestValidationErrorIs(t *testing.T) {
 		t.Errorf("Error() must aggregate failures: %q", err)
 	}
 }
+
+func TestPatternWithCommaQuantifier(t *testing.T) {
+	type RangeModel struct {
+		Code  string `validate:"pattern=^[0-9]{1,3}$"`
+		Alpha string `validate:"required,pattern='^[a-z]{2,4}$'"`
+		Colon string `validate:"pattern:^[A-Z]{2,3}$"`
+	}
+
+	valid := RangeModel{Code: "123", Alpha: "abcd", Colon: "ABC"}
+	if err := Struct(&valid); err != nil {
+		t.Fatalf("valid RangeModel failed: %v", err)
+	}
+
+	invalid := RangeModel{Code: "1234", Alpha: "a", Colon: "A"}
+	err := Struct(&invalid)
+	if err == nil {
+		t.Fatal("invalid RangeModel expected errors")
+	}
+	ve, ok := err.(*ValidationError)
+	if !ok {
+		t.Fatalf("expected *ValidationError, got %T", err)
+	}
+	if len(ve.Fields) != 3 {
+		t.Errorf("expected 3 field errors, got %d: %+v", len(ve.Fields), ve.Fields)
+	}
+}
+
+func TestPatternCacheConcurrent(t *testing.T) {
+	const goroutines = 20
+	const iterations = 50
+	errCh := make(chan error, goroutines)
+
+	for g := 0; g < goroutines; g++ {
+		go func() {
+			for i := 0; i < iterations; i++ {
+				if err := Field("test1234", "pattern=^[a-z]+[0-9]+$"); err != nil {
+					errCh <- err
+					return
+				}
+			}
+			errCh <- nil
+		}()
+	}
+
+	for g := 0; g < goroutines; g++ {
+		if err := <-errCh; err != nil {
+			t.Fatalf("concurrent pattern check failed: %v", err)
+		}
+	}
+}
+
+type OrderItem struct {
+	Name     string `validate:"required"`
+	Quantity int    `validate:"min=1"`
+}
+
+type Order struct {
+	ID       string               `validate:"required"`
+	Items    []OrderItem          `validate:"min=1"`
+	ExtraMap map[string]OrderItem `validate:"omitempty"`
+	ItemPtrs []*OrderItem         `validate:"omitempty"`
+}
+
+func TestNestedSlicesAndMaps(t *testing.T) {
+	valid := Order{
+		ID: "ORD-001",
+		Items: []OrderItem{
+			{Name: "Book", Quantity: 2},
+			{Name: "Pen", Quantity: 5},
+		},
+		ExtraMap: map[string]OrderItem{
+			"gift": {Name: "Bookmark", Quantity: 1},
+		},
+		ItemPtrs: []*OrderItem{
+			{Name: "Notebook", Quantity: 1},
+		},
+	}
+	if err := Struct(&valid); err != nil {
+		t.Fatalf("valid order failed: %v", err)
+	}
+
+	invalid := Order{
+		ID: "ORD-002",
+		Items: []OrderItem{
+			{Name: "Book", Quantity: 1},
+			{Name: "", Quantity: 0}, // fails Items[1].Name and Items[1].Quantity
+		},
+		ExtraMap: map[string]OrderItem{
+			"bad": {Name: "", Quantity: 3}, // fails ExtraMap[bad].Name
+		},
+		ItemPtrs: []*OrderItem{
+			nil,                             // skipped without panic
+			{Name: "Sticker", Quantity: -1}, // fails ItemPtrs[1].Quantity
+		},
+	}
+	err := Struct(&invalid)
+	if err == nil {
+		t.Fatal("invalid order expected errors")
+	}
+	ve, ok := err.(*ValidationError)
+	if !ok {
+		t.Fatalf("expected *ValidationError, got %T", err)
+	}
+
+	fieldMap := make(map[string]string)
+	for _, f := range ve.Fields {
+		fieldMap[f.Field] = f.Rule
+	}
+
+	expectedFields := []string{
+		"Items[1].Name",
+		"Items[1].Quantity",
+		"ExtraMap[bad].Name",
+		"ItemPtrs[1].Quantity",
+	}
+
+	for _, expected := range expectedFields {
+		if _, exists := fieldMap[expected]; !exists {
+			t.Errorf("expected error on field %q, but got fields: %+v", expected, fieldMap)
+		}
+	}
+}

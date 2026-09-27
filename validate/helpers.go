@@ -31,9 +31,64 @@ func interfaceValue(v reflect.Value) any {
 	return nil
 }
 
+func splitRules(tag string) []string {
+	var rules []string
+	var cur strings.Builder
+	var inQuote byte
+	var braces, brackets, parens int
+
+	for i := 0; i < len(tag); i++ {
+		c := tag[i]
+		switch {
+		case inQuote != 0:
+			if c == inQuote {
+				inQuote = 0
+			}
+			cur.WriteByte(c)
+		case c == '"' || c == '\'':
+			inQuote = c
+			cur.WriteByte(c)
+		case c == '{':
+			braces++
+			cur.WriteByte(c)
+		case c == '}':
+			if braces > 0 {
+				braces--
+			}
+			cur.WriteByte(c)
+		case c == '[':
+			brackets++
+			cur.WriteByte(c)
+		case c == ']':
+			if brackets > 0 {
+				brackets--
+			}
+			cur.WriteByte(c)
+		case c == '(':
+			parens++
+			cur.WriteByte(c)
+		case c == ')':
+			if parens > 0 {
+				parens--
+			}
+			cur.WriteByte(c)
+		case c == ',' && braces == 0 && brackets == 0 && parens == 0:
+			rules = append(rules, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(c)
+		}
+	}
+	if cur.Len() > 0 {
+		rules = append(rules, cur.String())
+	}
+	return rules
+}
+
 func hasRule(tag, want string) bool {
-	for _, r := range strings.Split(tag, ",") {
-		if strings.TrimSpace(r) == want {
+	for _, r := range splitRules(tag) {
+		name, _ := parseRule(r)
+		if name == want {
 			return true
 		}
 	}
@@ -41,8 +96,17 @@ func hasRule(tag, want string) bool {
 }
 
 func parseRule(rule string) (name, arg string) {
-	if i := strings.IndexByte(rule, '='); i >= 0 {
-		return rule[:i], rule[i+1:]
+	rule = strings.TrimSpace(rule)
+	if i := strings.IndexAny(rule, "=:"); i >= 0 {
+		name = strings.TrimSpace(rule[:i])
+		arg = strings.TrimSpace(rule[i+1:])
+		if (strings.HasPrefix(arg, "'") && strings.HasSuffix(arg, "'")) ||
+			(strings.HasPrefix(arg, "\"") && strings.HasSuffix(arg, "\"")) {
+			if len(arg) >= 2 {
+				arg = arg[1 : len(arg)-1]
+			}
+		}
+		return name, arg
 	}
 	return rule, ""
 }

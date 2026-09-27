@@ -8,8 +8,10 @@ import (
 	"net/mail"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Struct validates v (a struct or pointer to a struct) against its `validate`
@@ -101,8 +103,62 @@ func walk(kiw reflect.Value, path string, errs *[]FieldError) error {
 		if fe != nil {
 			*errs = append(*errs, *fe)
 		}
+
+		if !nilPtr && (eff.Kind() == reflect.Slice || eff.Kind() == reflect.Array || eff.Kind() == reflect.Map) {
+			if err := walkElements(eff, name, errs); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
+}
+
+func walkElements(v reflect.Value, path string, errs *[]FieldError) error {
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < v.Len(); i++ {
+			elem, nilPtr := effective(v.Index(i))
+			if nilPtr {
+				continue
+			}
+			elemPath := fmt.Sprintf("%s[%d]", path, i)
+			if elem.Kind() == reflect.Struct {
+				if err := walk(elem, elemPath, errs); err != nil {
+					return err
+				}
+			} else if elem.Kind() == reflect.Slice || elem.Kind() == reflect.Array || elem.Kind() == reflect.Map {
+				if err := walkElements(elem, elemPath, errs); err != nil {
+					return err
+				}
+			}
+		}
+	case reflect.Map:
+		keys := v.MapKeys()
+		sortMapKeys(keys)
+		for _, key := range keys {
+			val, nilPtr := effective(v.MapIndex(key))
+			if nilPtr {
+				continue
+			}
+			elemPath := fmt.Sprintf("%s[%v]", path, key.Interface())
+			if val.Kind() == reflect.Struct {
+				if err := walk(val, elemPath, errs); err != nil {
+					return err
+				}
+			} else if val.Kind() == reflect.Slice || val.Kind() == reflect.Array || val.Kind() == reflect.Map {
+				if err := walkElements(val, elemPath, errs); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func sortMapKeys(keys []reflect.Value) {
+	sort.Slice(keys, func(i, j int) bool {
+		return fmt.Sprint(keys[i].Interface()) < fmt.Sprint(keys[j].Interface())
+	})
 }
 
 // applyRules evaluates every rule in tag, reporting the first failing rule.
@@ -115,7 +171,7 @@ func applyRules(field string, v reflect.Value, tag string) (*FieldError, error) 
 	if hasRule(tag, "omitempty") && isZero(v) {
 		return nil, nil
 	}
-	for _, rule := range strings.Split(tag, ",") {
+	for _, rule := range splitRules(tag) {
 		rule = strings.TrimSpace(rule)
 		if rule == "" || rule == "omitempty" {
 			continue
@@ -130,6 +186,20 @@ func applyRules(field string, v reflect.Value, tag string) (*FieldError, error) 
 		}
 	}
 	return nil, nil
+}
+
+var patternCache sync.Map // map[string]*regexp.Regexp
+
+func compilePattern(pattern string) (*regexp.Regexp, error) {
+	if cached, ok := patternCache.Load(pattern); ok {
+		return cached.(*regexp.Regexp), nil
+	}
+	re, err := regexp.Compile(`\A(?:` + pattern + `)\z`)
+	if err != nil {
+		return nil, err
+	}
+	patternCache.Store(pattern, re)
+	return re, nil
 }
 
 func evalRule(name, arg string, v reflect.Value) (bool, error) {
@@ -158,7 +228,7 @@ func evalRule(name, arg string, v reflect.Value) (bool, error) {
 		if v.Kind() != reflect.String {
 			return false, fmt.Errorf("rule %q requires a string field", name)
 		}
-		re, err := regexp.Compile(`\A(?:` + arg + `)\z`)
+		re, err := compilePattern(arg)
 		if err != nil {
 			return false, fmt.Errorf("rule %q: %w", name, err)
 		}
