@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/http"
+	"strings"
 )
 
 var errMalformedBasic = errors.New("auth: malformed basic credentials")
@@ -14,7 +15,8 @@ type BasicVerifier func(identifier, password string) (*Identity, error)
 
 // BasicAuth implements RFC 7617 over the verifier.
 func BasicAuth(realm string, verify BasicVerifier) Middleware {
-	challenge := "Basic realm=\"" + realm + "\""
+	challenge := "Basic realm=\"" + sanitizeRealm(realm) + "\""
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			scheme, param, ok := authParam(r.Header.Get("Authorization"))
@@ -65,4 +67,14 @@ func decodeBasicPair(param string) (identifier, password string, err error) {
 
 func subtleCompare(a, b string) bool {
 	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
+}
+
+func sanitizeRealm(s string) string {
+	s = strings.ReplaceAll(s, "\r", "")
+	s = strings.ReplaceAll(s, "\n", "")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	if strings.TrimSpace(s) == "" {
+		return "Restricted"
+	}
+	return s
 }

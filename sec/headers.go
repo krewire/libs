@@ -2,8 +2,9 @@ package sec
 
 import (
 	"net/http"
-	"regexp"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 // SecurityOptions tunes the security-headers middleware.
@@ -14,12 +15,33 @@ type SecurityOptions struct {
 	PermissionsPolicy string
 }
 
-var tagStripper = regexp.MustCompile(`<[^>]*>`)
-
-// StripTags removes HTML tags from s — a defense-in-depth helper for fields
-// that must be plain text. Escaping remains html/template's job.
+// StripTags removes HTML tags from s using an HTML tokenizer in an iterative
+// loop to prevent nested tag evasion (e.g. <<script>script>) and quoted attribute
+// bypasses. Escaping remains html/template's job.
 func StripTags(s string) string {
-	return strings.TrimSpace(tagStripper.ReplaceAllString(s, ""))
+	prev := s
+	for i := 0; i < 10; i++ {
+		stripped := stripHTMLOnce(prev)
+		if stripped == prev {
+			break
+		}
+		prev = stripped
+	}
+	return strings.TrimSpace(prev)
+}
+
+func stripHTMLOnce(s string) string {
+	var sb strings.Builder
+	z := html.NewTokenizer(strings.NewReader(s))
+	for {
+		tt := z.Next()
+		switch tt {
+		case html.ErrorToken:
+			return sb.String()
+		case html.TextToken:
+			sb.Write(z.Text())
+		}
+	}
 }
 
 // SecurityHeaders returns middleware applying browser hardening headers.

@@ -13,6 +13,8 @@ func TestStripTags(t *testing.T) {
 	}{
 		{"<p>Hello <b>World</b></p>", "Hello World"},
 		{"<script>alert(1)</script>", "alert(1)"},
+		{"<img src=\"foo>bar\" onerror=\"alert(1)\">after", "after"},
+		{"<<script>script>alert(1)<</script>/script>", "alert(1)"},
 		{"no tags", "no tags"},
 		{"", ""},
 	}

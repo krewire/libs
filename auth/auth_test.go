@@ -136,3 +136,23 @@ func TestJWTAuthMiddleware(t *testing.T) {
 		t.Errorf("status = %d, want 200 with continue", rec3.Code)
 	}
 }
+
+func TestBasicAuthRealmSanitization(t *testing.T) {
+	mw := BasicAuth("krewire\r\nInjected-Header: evil\n\"quote\"", func(id, pass string) (*Identity, error) {
+		return nil, nil
+	})
+	handler := mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/secure", nil)
+	handler.ServeHTTP(rec, req)
+
+	ch := rec.Header().Get("WWW-Authenticate")
+	if strings.Contains(ch, "\r") || strings.Contains(ch, "\n") {
+		t.Errorf("WWW-Authenticate contains CRLF: %q", ch)
+	}
+	expected := `Basic realm="krewireInjected-Header: evil\"quote\""`
+	if ch != expected {
+		t.Errorf("WWW-Authenticate = %q, want %q", ch, expected)
+	}
+}
