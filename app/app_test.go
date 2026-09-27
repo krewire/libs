@@ -61,3 +61,25 @@ func TestCanceledBootstrapStillRegistersBeforeStart(t *testing.T) {
 		t.Fatal("provider was not registered")
 	}
 }
+
+func TestRunExecutesRunnerAndStopsProviders(t *testing.T) {
+	a := New()
+	p := &provider{name: "clock"}
+	if err := a.Use(p); err != nil {
+		t.Fatal(err)
+	}
+	called := false
+	err := a.Run(context.Background(), RunnerFunc(func(_ context.Context, c *Container) error {
+		called = true
+		if _, ok := c.Get("clock"); !ok {
+			t.Fatal("provider missing from runner")
+		}
+		return nil
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !called || !p.stopped {
+		t.Fatalf("called=%v stopped=%v", called, p.stopped)
+	}
+}

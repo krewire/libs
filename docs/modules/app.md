@@ -8,11 +8,14 @@ Import: `github.com/krewire/libs/app`
 
 ## Main API
 
-- `Application` — provider registration and bootstrap/shutdown lifecycle.
+- `Application` — provider registration and lifecycle coordination.
+- `Runner` — runtime contract supplied by the caller.
+- `RunnerFunc` — function adapter for simple runtimes.
 - `New()` — creates an application with an empty container.
 - `Use(providers...)` — registers providers in startup order.
 - `Bootstrap(ctx)` — registers all providers, then starts lifecycle-aware providers.
 - `Shutdown(ctx)` — stops started providers in reverse order.
+- `Run(ctx, runner)` — bootstraps providers, runs the supplied runtime, and shuts down providers.
 - `Container` — named service registry.
 - `Resolve[T]` — typed service lookup.
 
@@ -21,8 +24,9 @@ Import: `github.com/krewire/libs/app`
 ```go
 application := app.New()
 if err := application.Use(databaseProvider, httpProvider); err != nil { return err }
-if err := application.Bootstrap(ctx); err != nil { return err }
-defer application.Shutdown(context.Background())
+if err := application.Run(ctx, app.RunnerFunc(func(ctx context.Context, services *app.Container) error {
+    return runCLIOrServer(ctx, services)
+})); err != nil { return err }
 ```
 
 ## Design boundary

@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -59,6 +60,24 @@ func Resolve[T any](c *Container, name string) (T, bool) {
 	}
 	resolved, ok := value.(T)
 	return resolved, ok
+}
+
+// Runner executes the application-specific runtime after providers are ready.
+// The application does not assume whether the runtime is HTTP, CLI, worker,
+// desktop, or another execution model.
+type Runner interface {
+	Run(context.Context, *Container) error
+}
+
+// RunnerFunc adapts a function into a Runner.
+type RunnerFunc func(context.Context, *Container) error
+
+// Run implements Runner.
+func (f RunnerFunc) Run(ctx context.Context, container *Container) error {
+	if f == nil {
+		return fmt.Errorf("app: nil runner")
+	}
+	return f(ctx, container)
 }
 
 // Application manages provider registration and lifecycle.
@@ -134,6 +153,23 @@ func (a *Application) Bootstrap(ctx context.Context) error {
 		a.mu.Unlock()
 	}
 	return nil
+}
+
+// Run bootstraps providers, executes runner, and shuts providers down when the
+// runner returns. Runner and shutdown errors are both preserved.
+func (a *Application) Run(ctx context.Context, runner Runner) error {
+	if a == nil {
+		return fmt.Errorf("app: nil application")
+	}
+	if runner == nil {
+		return fmt.Errorf("app: runner must not be nil")
+	}
+	if err := a.Bootstrap(ctx); err != nil {
+		return err
+	}
+	runErr := runner.Run(ctx, a.container)
+	stopErr := a.stopStarted(ctx)
+	return errors.Join(runErr, stopErr)
 }
 
 // Shutdown stops started providers in reverse startup order.
