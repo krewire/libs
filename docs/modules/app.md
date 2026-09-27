@@ -14,7 +14,7 @@ Import: `github.com/krewire/libs/app`
 - `Bootstrap(ctx)` — registers all providers, then starts lifecycle-aware providers.
 - `Shutdown(ctx)` — stops started providers in reverse order.
 - `Container` — named service registry.
-- `Resolve[T](container, name)` — typed service lookup.
+- `Resolve[T]` — typed service lookup.
 
 ## Example
 
