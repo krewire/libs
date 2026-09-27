@@ -25,10 +25,7 @@ ecosystem standardizes on it instead of shipping parallel packages.
 
 ### 1.1 Current State
 
-- Module root `github.com/krewire/libs` with `core/` and `term/` packages.
-- `core/` provides the shared primitives, including the common error type and exit-code mapping.
-- `term/` provides terminal I/O, output formatting, and color conventions.
-- Shared module root: Go 1.22, MIT license.
+- Module root `github.com/krewire/libs` targeting Go 1.26.0 with `core`, `auth`, `sec`, `vein`, `kern`, `config`, `validator`, `term`, and `markdown` packages.
 
 ## 2. Problem Statement
 

@@ -92,8 +92,8 @@ The ecosystem has a declarative center (`libs/core` — *what* is valid) but no 
 |--------|-------|
 | [KWL-K1N2Q](./KWL-CORE-K1N2Q-core-business-rules.md) | Core Business Rules (declarative counterpart) |
 | [KWL-W0J2X](./KWL-CORE-W0J2X-errors-exit-codes.md) | Errors & Exit Codes (extends) |
-| [KWF-ARCH-M8K2Q](../framework/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Vision |
-| [KWF-5ZHQV](../framework/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (extraction path that kern supervises) |
+| [KWF-ARCH-M8K2Q](https://github.com/krewire/framework/blob/main/docs/specs/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Vision |
+| [KWF-5ZHQV](https://github.com/krewire/framework/blob/main/docs/specs/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (extraction path that kern supervises) |
 
 ## 9. References
 

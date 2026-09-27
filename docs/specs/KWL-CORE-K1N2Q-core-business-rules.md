@@ -87,7 +87,7 @@ The 8 kinds from the unified vision (`internal/docs/project-vision.md`, `KWF-M8K
 | [KWL-W0J2X](./KWL-CORE-W0J2X-errors-exit-codes.md) | Errors & Exit Codes (extends) |
 | [KWL-2X1QZ](./KWL-CONFIG-2X1QZ-configuration-loading.md) | Configuration Loading (consumer) |
 | [KWL-LHANF](./KWL-VALIDATE-LHANF-struct-validation.md) | Struct Validation (consumer) |
-| [KWF-M8K2Q](../framework/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Vision (source of workload matrix) |
+| [KWF-M8K2Q](https://github.com/krewire/framework/blob/main/docs/specs/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Vision (source of workload matrix) |
 | [KWL-KERN-X8P3L](./KWL-KERN-X8P3L-kernel-executor.md) | Kernel Executor (imperative counterpart) |
 
 ## 9. References

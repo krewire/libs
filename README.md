@@ -73,8 +73,8 @@ type User struct {
     Role  string `validate:"oneof=admin viewer"`
 }
 
-if err := validate.Struct(User{Email: "user@example.com", Role: "viewer"}); err != nil {
-    // *validate.ValidationError contains field-level failures.
+if err := validator.Struct(User{Email: "user@example.com", Role: "viewer"}); err != nil {
+    // *validator.ValidationError contains field-level failures.
     return err
 }
 ```

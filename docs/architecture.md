@@ -6,9 +6,8 @@
 libs/
 ├── core/                 # Business rules — Kind/Workload registry, SpecID/RequirementID, Project invariants, DomainEvent + ExitCode/Error (KWL-K1N2Q, re-exports vein)
 ├── kern/                 # Kernel executor — Kernel, Module, Registry, Executor, Supervisor (KWL-KERN-X8P3L)
-├── vein/                 # Krewire Vein — observability: logging (Setup/Install), diagnostics (Attr/Hint/FormatTree), stack traces (WithStack/StackOf), error handling (ExitCode/Error) — like Spring Boot Actuator
-├── sec/                  # Krewire Security — auth (Identity/Basic/JWT), headers (SecurityHeaders/StripTags), CSRF, policy (Require/WithRoles) — like Spring Security
-├── log/                  # Canonical `slog` logger factory — handler format & level from env/debug (KWL-P8W2N) — deprecated: use vein
+├── vein/                 # Krewire Vein — observability: logging (Setup/Install), diagnostics (Attr/Hint/FormatTree), stack traces (WithStack/StackOf), error handling (ExitCode/Error)
+├── sec/                  # Krewire Security — auth integration, headers, CORS, CSRF, health, policies, SSRF URL validation, PII masking, and slog masking
 ├── term/                 # Terminal I/O, colors, formatting
 ├── config/               # Typed `krewire.yaml` loading for all 8 kinds (delegates business validation to core)
 ├── validator/            # Struct validation and extensible rules (`validate:"required"` etc.)

@@ -96,9 +96,9 @@ It consumes `KWL-ARCH-J2K9Q` scope levels (Workspace → Module → Domain → S
 |--------|-------|
 | [KWL-ARCH-J2K9Q](./KWL-ARCH-J2K9Q-ecosystem-scope-levels.md) | Ecosystem Scope Levels (defines Scope used for test placement) |
 | [KWL-K1N2Q](./KWL-CORE-K1N2Q-core-business-rules.md) | Core Business Rules (Kind/Project/SpecID types) |
-| [KWN-P0FWA](../krewire/KWN-TEST-P0FWA-project-validation.md) | Project Validation (`kiw test` → `go test ./...`) |
-| [KWN-Z0VFC](../krewire/KWN-DEVTOOL-Z0VFC-krewire-devtool.md) | Krewire Devtool (CLI entry) |
-| [KWG-K2N7Q](../guild/KWG-ECO-K2N7Q-krewire-native-guild-template.md) | Guild Template (agent workflow for spec-driven dev) |
+| [KWN-P0FWA](https://github.com/krewire/krewire/blob/main/docs/specs/KWN-TEST-P0FWA-project-validation.md) | Project Validation (`kiw test` → `go test ./...`) |
+| [KWN-Z0VFC](https://github.com/krewire/krewire/blob/main/docs/specs/KWN-DEVTOOL-Z0VFC-krewire-devtool.md) | Krewire Devtool (CLI entry) |
+| [KWG-K2N7Q](https://github.com/krewire/guild/blob/main/docs/specs/KWG-ECO-K2N7Q-krewire-native-guild-template.md) | Guild Template (agent workflow for spec-driven dev) |
 
 ## 9. References
 

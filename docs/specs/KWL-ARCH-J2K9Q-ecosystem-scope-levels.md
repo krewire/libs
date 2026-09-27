@@ -110,8 +110,8 @@ Workspace (Krewire Workspace hub, Go go.work at hub root)
 |--------|-------|
 | [KWL-K1N2Q](./KWL-CORE-K1N2Q-core-business-rules.md) | Core Business Rules & Workload Registry (extends) |
 | [KWL-KERN-X8P3L](./KWL-KERN-X8P3L-kernel-executor.md) | Kernel Executor & Supervisor (maps Module → Service) |
-| [KWF-M8K2Q](../framework/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Framework Vision (source of workload matrix) |
-| [KWF-5ZHQV](../framework/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (Unit → Service extraction) |
+| [KWF-M8K2Q](https://github.com/krewire/framework/blob/main/docs/specs/KWF-ARCH-M8K2Q-unified-framework-vision.md) | Unified Framework Vision (source of workload matrix) |
+| [KWF-5ZHQV](https://github.com/krewire/framework/blob/main/docs/specs/KWF-ARCH-5ZHQV-modular-monolith-architecture.md) | Modular Monolith (Unit → Service extraction) |
 | [KWL-TEST-P8M4L](./KWL-TEST-P8M4L-spec-driven-testing.md) | Spec-Driven Testing (consumes Scope for test naming) |
 
 ## 9. References
