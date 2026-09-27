@@ -8,11 +8,15 @@ Import: `github.com/krewire/libs/functional`
 
 ## Main API
 
-- `Memoize[K, V]` — caches successful function results by comparable key and is safe for concurrent use.
+- `Memoize[K, V]` — caches successful function results by comparable key.
+- `MemoizeWithTTL[K, V]` — caches successful results until a duration expires.
 - `Bind[A, B, C]` — fixes the first argument of a two-argument function.
-- `Compose[A, B, C]` — chains two functions.
+- `Compose[A, B, C]` — chains two functions with different intermediate types.
+- `Map[A, B]` — transforms a slice into a new slice.
+- `Filter[T]` — selects items into a new slice.
+- `Reduce[A, B]` — folds a slice into an accumulator.
+- `Pipe[T]` — composes same-type functions from left to right.
 - `Counter` — returns a stateful incrementing closure.
-- `ErrNilFunction` — returned by `Memoize` when its function argument is nil.
 
 ## Example
 
