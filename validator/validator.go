@@ -1,17 +1,14 @@
-// Package validate validates structs using rules declared in `validate`
+// Package validator validates structs using rules declared in `validate`
 // struct tags. It is framework-agnostic and stdlib-only, so the web and CLI
 // layers can share one rule model.
-package validate
+package validator
 
 import (
 	"fmt"
-	"net/mail"
 	"reflect"
-	"regexp"
-	"sort"
-	"strconv"
 	"strings"
-	"sync"
+
+	"github.com/krewire/libs/validator/rules"
 )
 
 // Struct validates v (a struct or pointer to a struct) against its `validate`
@@ -155,12 +152,6 @@ func walkElements(v reflect.Value, path string, errs *[]FieldError) error {
 	return nil
 }
 
-func sortMapKeys(keys []reflect.Value) {
-	sort.Slice(keys, func(i, j int) bool {
-		return fmt.Sprint(keys[i].Interface()) < fmt.Sprint(keys[j].Interface())
-	})
-}
-
 // applyRules evaluates every rule in tag, reporting the first failing rule.
 // A value with `omitempty` that is zero skips all rules. Malformed rules are
 // returned as errors, never panics.
@@ -177,7 +168,7 @@ func applyRules(field string, v reflect.Value, tag string) (*FieldError, error) 
 			continue
 		}
 		name, arg := parseRule(rule)
-		fail, err := evalRule(name, arg, v)
+		fail, err := rules.Evaluate(name, arg, v)
 		if err != nil {
 			return nil, fmt.Errorf("validate: field %s: %w", field, err)
 		}
@@ -186,56 +177,4 @@ func applyRules(field string, v reflect.Value, tag string) (*FieldError, error) 
 		}
 	}
 	return nil, nil
-}
-
-var patternCache sync.Map // map[string]*regexp.Regexp
-
-func compilePattern(pattern string) (*regexp.Regexp, error) {
-	if cached, ok := patternCache.Load(pattern); ok {
-		return cached.(*regexp.Regexp), nil
-	}
-	re, err := regexp.Compile(`\A(?:` + pattern + `)\z`)
-	if err != nil {
-		return nil, err
-	}
-	patternCache.Store(pattern, re)
-	return re, nil
-}
-
-func evalRule(name, arg string, v reflect.Value) (bool, error) {
-	switch name {
-	case "required":
-		return isZero(v), nil
-	case "min", "max":
-		return evalBound(name == "min", arg, v)
-	case "len":
-		l, ok := lenOf(v)
-		if !ok {
-			return false, fmt.Errorf("rule %q requires a string, slice, map, or array", name)
-		}
-		want, err := strconv.ParseInt(strings.TrimSpace(arg), 10, 64)
-		if err != nil {
-			return false, fmt.Errorf("rule %q: %w", name, err)
-		}
-		return int64(l) != want, nil
-	case "email":
-		if v.Kind() != reflect.String {
-			return false, fmt.Errorf("rule %q requires a string field", name)
-		}
-		_, err := mail.ParseAddress(v.String())
-		return err != nil, nil
-	case "pattern":
-		if v.Kind() != reflect.String {
-			return false, fmt.Errorf("rule %q requires a string field", name)
-		}
-		re, err := compilePattern(arg)
-		if err != nil {
-			return false, fmt.Errorf("rule %q: %w", name, err)
-		}
-		return !re.MatchString(v.String()), nil
-	case "oneof":
-		return evalOneof(arg, v)
-	default:
-		return false, fmt.Errorf("unknown rule %q", name)
-	}
 }

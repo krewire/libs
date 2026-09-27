@@ -1,4 +1,4 @@
-package validate
+package rules
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-func evalBound(isMin bool, arg string, v reflect.Value) (bool, error) {
+// EvalMax evaluates the 'max' rule: number <= max, string/slice/map length <= max.
+func EvalMax(arg string, v reflect.Value) (bool, error) {
 	want, err := strconv.ParseFloat(strings.TrimSpace(arg), 64)
 	if err != nil {
 		return false, fmt.Errorf("invalid bound %q", arg)
@@ -26,9 +27,6 @@ func evalBound(isMin bool, arg string, v reflect.Value) (bool, error) {
 		got = float64(v.Len())
 	default:
 		return false, fmt.Errorf("min/max require a number, string, slice, map, or array, got %s", v.Kind())
-	}
-	if isMin {
-		return got < want, nil
 	}
 	return got > want, nil
 }

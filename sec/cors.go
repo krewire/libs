@@ -125,7 +125,9 @@ func CORS(opts ...func(*CORSOptions)) Middleware {
 				allowed = true
 			} else {
 				for _, oOrigin := range o.AllowOrigins {
-					if oOrigin == "*" || strings.EqualFold(oOrigin, origin) {
+					// Never reflect an arbitrary origin when credentials are enabled.
+					// The wildcard origin is valid only for non-credentialed CORS.
+					if oOrigin != "*" && strings.EqualFold(oOrigin, origin) {
 						w.Header().Set("Access-Control-Allow-Origin", origin)
 						w.Header().Add("Vary", "Origin")
 						allowed = true

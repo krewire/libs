@@ -53,9 +53,9 @@ removes that duplication while keeping validation explicit and type-safe.
 
 | ID          | Requirement                                                       | Priority |
 | ----------- | ----------------------------------------------------------------- | -------- |
-| VAL-AP-001  | Provide package `validate` in `github.com/krewire/libs/validate`.  | Must     |
-| VAL-AP-002  | Provide `validate.Struct(v any) error` returning nil when all rules pass and a `*ValidationError` when any rule fails. | Must |
-| VAL-AP-003  | Provide `validate.Field(value any, tag string) error` validating a single value, used for scalar checks. | Must |
+| VAL-AP-001  | Provide package `validator` in `github.com/krewire/libs/validator`.  | Must     |
+| VAL-AP-002  | Provide `validator.Struct(v any) error` returning nil when all rules pass and a `*ValidationError` when any rule fails. | Must |
+| VAL-AP-003  | Provide `validator.Field(value any, tag string) error` validating a single value, used for scalar checks. | Must |
 | VAL-AP-004  | Ignore unexported fields; nil pointers marked `omitempty` are skipped. | Must |
 
 ### 5.2 Rules

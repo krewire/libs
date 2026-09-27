@@ -107,3 +107,21 @@ func TestCORS_DisallowedOrigin(t *testing.T) {
 		t.Errorf("disallowed origin should not receive Access-Control-Allow-Origin header")
 	}
 }
+
+func TestCORS_WildcardWithCredentialsDoesNotReflectOrigin(t *testing.T) {
+	handler := sec.CORS(sec.WithOrigins("*"), sec.WithCredentials(true))(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	req := httptest.NewRequest(http.MethodGet, "/data", nil)
+	req.Header.Set("Origin", "https://attacker.example")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Fatalf("wildcard credentials must not reflect origin, got %q", got)
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Credentials"); got != "" {
+		t.Fatalf("credentials must not be enabled for wildcard origin, got %q", got)
+	}
+}

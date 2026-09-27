@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var testSecret = []byte("krewire-auth-test-secret")
+var testSecret = []byte("01234567890123456789012345678901")
 
 func TestIdentityHasRole(t *testing.T) {
 	id := &Identity{

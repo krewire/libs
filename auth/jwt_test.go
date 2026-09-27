@@ -7,7 +7,7 @@ import (
 )
 
 func TestJWTRoundTrip(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := DefaultClaims("user-123", time.Hour)
 	claims["email"] = "user@example.com"
 
@@ -29,7 +29,7 @@ func TestJWTRoundTrip(t *testing.T) {
 }
 
 func TestJWTExpired(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := DefaultClaims("user-123", -time.Minute)
 
 	token, err := SignJWT(secret, claims)
@@ -44,7 +44,7 @@ func TestJWTExpired(t *testing.T) {
 }
 
 func TestJWTTampered(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := DefaultClaims("user-123", time.Hour)
 	token, _ := SignJWT(secret, claims)
 
@@ -68,7 +68,7 @@ func TestB64JSON(t *testing.T) {
 }
 
 func TestJWT_NBF_NotYetValid(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := DefaultClaims("user-123", time.Hour)
 	claims["nbf"] = time.Now().Add(10 * time.Minute).Unix()
 
@@ -90,7 +90,7 @@ func TestJWT_NBF_NotYetValid(t *testing.T) {
 }
 
 func TestJWT_IAT_Future(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := DefaultClaims("user-123", time.Hour)
 	claims["iat"] = time.Now().Add(10 * time.Minute).Unix()
 
@@ -106,7 +106,7 @@ func TestJWT_IAT_Future(t *testing.T) {
 }
 
 func TestJWT_RequireExp(t *testing.T) {
-	secret := []byte("secret-key")
+	secret := []byte("01234567890123456789012345678901")
 	claims := Claims{"sub": "user-123"} // no exp
 
 	token, _ := SignJWT(secret, claims)

@@ -46,7 +46,7 @@ func stripHTMLOnce(s string) string {
 
 // SecurityHeaders returns middleware applying browser hardening headers.
 func SecurityHeaders(opts ...func(*SecurityOptions)) Middleware {
-	o := &SecurityOptions{}
+	o := &SecurityOptions{HSTS: 31536000}
 	for _, f := range opts {
 		f(o)
 	}

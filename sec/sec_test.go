@@ -48,6 +48,9 @@ func TestSecurityHeaders(t *testing.T) {
 	if h.Get("Content-Security-Policy") != "default-src 'self'" {
 		t.Errorf("Content-Security-Policy = %q", h.Get("Content-Security-Policy"))
 	}
+	if h.Get("Strict-Transport-Security") != "max-age=31536000; includeSubDomains" {
+		t.Errorf("HSTS = %q", h.Get("Strict-Transport-Security"))
+	}
 }
 
 func TestSecurityHeadersCustom(t *testing.T) {

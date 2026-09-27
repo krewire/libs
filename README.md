@@ -1,67 +1,144 @@
 # Krewire Libraries
 
-**Krewire Libraries** is a monorepo of modular, reusable Go libraries for the Krewire ecosystem — `github.com/krewire/libs`. It provides the shared building blocks behind [`framework`](https://github.com/krewire/framework), [`mdbind`](https://github.com/krewire/mdbind), and [`kiw`](https://github.com/krewire/kiw).
+Reusable Go libraries for the Krewire ecosystem: small, composable packages for domain rules, application lifecycle, configuration, validation, security, observability, terminal output, and Markdown rendering.
 
-The unified framework vision ([`KWF-M8K2Q`](../framework/docs/specs/KWF-ARCH-M8K2Q-unified-framework-vision.md)) relies on `libs` for a single, typed `krewire.yaml` across all eight project kinds (`app`, `cli`, `site`, `book`, `worker`, `service`, `infra`, `kernel`).
+Module: `github.com/krewire/libs`
 
-## Overview
+## What this repository provides
 
-Each concern is an independent package, versioned and released on its own schedule. Consumers pull only what they need. Where the Go standard library already covers a concern (`flag`, `log/slog`, `os`), `libs` does not re-implement it.
+The repository is a Go monorepo. Each top-level package can be imported independently; consumers should depend only on the packages they use.
 
-## Packages
+| Package | Purpose | Main API areas |
+|---|---|---|
+| [`core`](./core) | Shared domain model and invariants | `Kind`, `Workload`, `Project`, `Scope`, `SpecID`, `RequirementID`, `DomainEvent`, versions, exit codes, diagnostic/error aliases |
+| [`kern`](./kern) | Kernel boot and workload execution | `Kernel`, `Module`, `Registry`, `Executor`, `Supervisor` |
+| [`vein`](./vein) | Logging, diagnostics, errors, and stack traces | `Setup`, `Install`, `WithAttrs`, `WithHint`, `FormatTree`, `WithStack`, `StackOf` |
+| [`auth`](./auth) | HTTP authentication primitives | `BasicAuth`, `JWTAuth`, `SignJWT`, `ParseJWT`, `Identity`, HTTP errors |
+| [`sec`](./sec) | HTTP security middleware | security headers, CORS, CSRF, health endpoints, authentication aliases, policies and roles |
+| [`config`](./config) | Typed configuration and environment overlays | `Load`, `LoadOrDefault`, `Override`, `.env` parsing, `Vars` |
+| [`validator`](./validator) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
+| [`term`](./term) | Terminal detection and ANSI styling | `Terminal`, `NewTerminal`, `Paint`, colors and styles |
+| [`markdown`](./markdown) | Markdown-to-HTML rendering | GFM rendering, heading IDs, base-prefixed links |
 
-| Path | Description |
-|------|-------------|
-| `core/` | **Business rules & workload registry** — `Kind`/`Workload` matrix, `SpecID`/`RequirementID`, `Project` invariants, `DomainEvent` + shared primitives (`ExitCodeSuccess/Failure/Usage`). Declarative control plane (`KWL-K1N2Q`). |
-| `kern/` | **Kernel executor & supervisor** — generic `Kernel`/`Module`/`Registry`/`Executor`/`Supervisor` for boot, lifecycle, and workload dispatch. Imperative control plane (`KWL-KERN-X8P3L`). |
-| `vein/` | **Krewire Vein — observability** — logging (`Setup`/`Install`), diagnostics (`Attr`/`Hint`/`FormatTree`), error handling (`ExitCode`/`Error`), stack traces (`WithStack`/`StackOf`). Like Spring Boot Actuator (subproduct). |
-| `sec/` | **Krewire Security — security** — `Identity`, `BasicAuth`, `JWTAuth` (HS256), `SecurityHeaders`, `CSRF`, `Policy`/`PolicySet` (`Require`/`WithRoles`). Like Spring Security (subproduct). |
-| `log/` | Canonical `slog` logger factory — installs the process logger (JSON/text, level) from `core.Env`/debug; bridges error diagnostics into structured attrs. **Deprecated: use `vein`** |
-| `term/` | Terminal I/O, output formatting, and color conventions. |
-| `config/` | Typed `krewire.yaml` loading for all 8 kinds (delegates business validation to `core`). |
-| `validate/` | Struct validation (`validate:"required"` tags) for config and resource schemas. |
+`core` is the declarative center of the ecosystem: it defines valid project kinds, workloads, scopes, versions, and project invariants. `kern` is the imperative layer: it initializes modules, orders dependencies, boots a kernel, dispatches workloads, and coordinates shutdown. `vein` is the preferred observability package; older integrations may still expose compatibility aliases through `core` and `sec`.
 
-Together `core` (declarative) + `kern` (imperative) form the **central control** of the ecosystem: every repo imports `core` for types/rules, and `framework`/`krewire` compose via `kern`. `config` + `validate` enforce the single-config rule — every workload from `cli` to `infra` is described in one `krewire.yaml` and validated before `kiw build` / `kiw deploy`.
+## Supported domain concepts
 
-Standard library responsibilities that `libs` intentionally does not duplicate:
+`core.Kind` recognizes these project kinds:
 
-| Concern | Stdlib package |
-|---------|----------------|
-| Argument parsing | `flag` |
-| Structured logging | `log/slog` |
-| Environment / config sources | `os`, `strconv` |
+`app`, `cli`, `site`, `book`, `worker`, `service`, `infra`, and `kernel`.
 
-## Getting Started
+`core.Scope` models the hierarchy `workspace → module → domain → service → unit`. `core.Version` and the compatibility helpers support checking module and ecosystem version requirements before execution.
 
-### Prerequisites
+## Installation
 
-- Go 1.22+ — https://go.dev/dl/
+Use the module or package you need:
 
-### Building and testing
+```bash
+go get github.com/krewire/libs/core
+go get github.com/krewire/libs/config
+go get github.com/krewire/libs/sec
+```
+
+The module currently targets Go `1.26.0` and depends on:
+
+- `github.com/yuin/goldmark` for Markdown rendering
+- `gopkg.in/yaml.v3` for YAML configuration and variable storage
+- `golang.org/x/net` as an indirect dependency
+
+## Small examples
+
+### Load typed configuration with environment overrides
+
+```go
+type ServerConfig struct {
+    Host string `yaml:"host"`
+    Port int    `yaml:"port"`
+}
+
+var cfg ServerConfig
+if err := config.Load("krewire.yaml", &cfg); err != nil {
+    return err
+}
+if err := config.Override(&cfg, os.LookupEnv, config.WithPrefix("APP_")); err != nil {
+    return err
+}
+```
+
+### Validate a struct
+
+```go
+type User struct {
+    Email string `validate:"required,email"`
+    Role  string `validate:"oneof=admin viewer"`
+}
+
+if err := validate.Struct(User{Email: "user@example.com", Role: "viewer"}); err != nil {
+    // *validate.ValidationError contains field-level failures.
+    return err
+}
+```
+
+### Protect an HTTP handler
+
+```go
+handler := sec.SecurityHeaders()(
+    sec.CORS(sec.WithOrigins("https://example.com"))(
+        sec.Require(sec.Authenticated())(http.HandlerFunc(handleRequest)),
+    ),
+)
+```
+
+For JWT or Basic authentication, use the middleware in [`auth`](./auth) or the corresponding aliases in [`sec`](./sec). Authentication secrets must come from runtime configuration; do not hard-code them in source code.
+
+### Render Markdown
+
+```go
+html, err := markdown.RenderWithBase(source, "/docs/")
+if err != nil {
+    return err
+}
+```
+
+## Development
+
+Prerequisites:
+
+- Go `1.26.0` or a compatible newer toolchain
+
+Run the same checks used by CI:
+
+```bash
+gofmt -l .                 # must print nothing
+go vet ./...
+go test ./...
+```
+
+A complete local build can be checked with:
 
 ```bash
 go build ./...
-go test ./...
-gofmt -l . && go vet ./...
 ```
 
-## Specifications
+CI runs on pushes to `main` and pull requests. It executes formatting, `go vet`, and the complete test suite with the stable Go toolchain.
 
-- `KWL-CORE-K1N2Q` — Core Business Rules & Workload Registry (declarative control plane)
-- `KWL-KERN-X8P3L` — Kernel Executor & Supervisor (imperative control plane)
-- `KWL-CONFIG-2X1QZ` — Configuration loading
-- `KWL-VALIDATE-LHANF` — Struct validation
-- `KWL-CORE-W0J2X` — Errors & exit codes (extended by K1N2Q)
-- `KWL-TERM-R934Y` — Terminal I/O & rendering
+## Design principles
 
-All specs live in `docs/specs/` (`KWL-*`).
+- Keep packages narrow and composable.
+- Prefer the standard library where it already solves the problem (`net/http`, `log/slog`, `os`, `flag`).
+- Keep domain rules in `core` and lifecycle mechanics in `kern`.
+- Make security behavior explicit and fail safely.
+- Preserve specification-to-test traceability; formal specifications live in [`docs/specs`](./docs/specs).
+- Update tests and documentation when public behavior changes.
 
-## Related Repositories
+More context is available in [`docs/architecture.md`](./docs/architecture.md), [`docs/philosophy.md`](./docs/philosophy.md), and [`docs/index.md`](./docs/index.md).
 
-- [framework](https://github.com/krewire/framework) — unified framework (`tui`/`web`+`ssg`/`ui`/`app`/`runtime`/`worker`/`service`/`infra`)
-- [mdbind](https://github.com/krewire/mdbind) — book/site builder on `framework/web`
-- [kiw](https://github.com/krewire/kiw) — devtool CLI for all kinds
+## Related repositories
+
+- [`framework`](https://github.com/krewire/framework) — unified Krewire framework
+- [`mdbind`](https://github.com/krewire/mdbind) — book/site builder
+- [`kiw`](https://github.com/krewire/kiw) — Krewire development tool
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [`LICENSE`](./LICENSE).

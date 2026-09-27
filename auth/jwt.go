@@ -22,8 +22,8 @@ const jwtAlgHS256 = "HS256"
 
 // SignJWT produces a compact HS256 JWS.
 func SignJWT(secret []byte, claims Claims) (string, error) {
-	if len(secret) == 0 {
-		return "", errors.New("auth: empty jwt secret")
+	if len(secret) < RecommendedMinSecretLength {
+		return "", fmt.Errorf("auth: jwt secret must be at least %d bytes", RecommendedMinSecretLength)
 	}
 	header := map[string]any{"alg": jwtAlgHS256, "typ": "JWT"}
 	h, err := b64JSON(header)
@@ -80,7 +80,7 @@ func ParseJWT(secret []byte, token string, opts ...ParseOption) (Claims, error) 
 	if len(secret) == 0 {
 		return nil, errors.New("auth: empty jwt secret")
 	}
-	po := &ParseOptions{}
+	po := &ParseOptions{MinSecretLength: RecommendedMinSecretLength}
 	for _, f := range opts {
 		f(po)
 	}
@@ -185,11 +185,11 @@ func JWTAuth(secret []byte, opts ...func(*JWTOptions)) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := ""
 			scheme, param, ok := authParam(r.Header.Get("Authorization"))
-		if ok && StrEqFold(scheme, "Bearer") {
-			token = param
-		} else if o.CookieName != "" {
-			token = CookieValue(r, o.CookieName)
-		}
+			if ok && StrEqFold(scheme, "Bearer") {
+				token = param
+			} else if o.CookieName != "" {
+				token = CookieValue(r, o.CookieName)
+			}
 			if token == "" {
 				if o.ContinueOnMissing {
 					next.ServeHTTP(w, r)
