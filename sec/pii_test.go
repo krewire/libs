@@ -2,8 +2,11 @@ package sec
 
 // Tests for PII masking and safe diagnostic redaction.
 import (
+	"bytes"
+	"context"
 	"log/slog"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -74,5 +77,23 @@ func TestMaskPIIAttrsMasksGroupsAndSecrets(t *testing.T) {
 	group := attrs[2].Value.Group()
 	if group[0].Value.String() != "[IPv6 REDACTED]" {
 		t.Fatalf("nested IPv6 = %q", group[0].Value.String())
+	}
+}
+
+func TestNewPIIHandlerMasksRecordsAndBoundAttrs(t *testing.T) {
+	var output bytes.Buffer
+	handler := NewPIIHandler(slog.NewTextHandler(&output, nil))
+	logger := slog.New(handler).With("request_email", "bound@example.com")
+	logger.LogAttrs(context.Background(), slog.LevelInfo, "request", slog.String("email", "alice@example.com"), slog.String("token", "secret"))
+	text := output.String()
+	for _, leaked := range []string{"bound@example.com", "alice@example.com", "secret"} {
+		if strings.Contains(text, leaked) {
+			t.Fatalf("PII leaked in log output: %q", text)
+		}
+	}
+	for _, masked := range []string{"a***@example.com", "[REDACTED]"} {
+		if !strings.Contains(text, masked) {
+			t.Fatalf("masked value %q missing from log output: %q", masked, text)
+		}
 	}
 }

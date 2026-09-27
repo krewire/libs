@@ -1,6 +1,7 @@
 package sec
 
 import (
+	"context"
 	"log/slog"
 	"net"
 	"regexp"
@@ -60,6 +61,45 @@ func MaskPIIAttrs(attrs ...slog.Attr) []slog.Attr {
 		masked[i] = maskPIIAttr(attr)
 	}
 	return masked
+}
+
+// NewPIIHandler wraps a slog.Handler and masks PII in records and attributes
+// before forwarding them. The wrapped handler remains responsible for output,
+// levels, formatting, and source metadata.
+func NewPIIHandler(next slog.Handler) slog.Handler {
+	if next == nil {
+		return nil
+	}
+	return piiHandler{next: next}
+}
+
+type piiHandler struct {
+	next slog.Handler
+}
+
+func (h piiHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	return h.next.Enabled(ctx, level)
+}
+
+func (h piiHandler) Handle(ctx context.Context, record slog.Record) error {
+	masked := slog.NewRecord(record.Time, record.Level, record.Message, record.PC)
+	attrs := make([]slog.Attr, 0, record.NumAttrs())
+	record.Attrs(func(attr slog.Attr) bool {
+		attrs = append(attrs, attr)
+		return true
+	})
+	for _, attr := range MaskPIIAttrs(attrs...) {
+		masked.AddAttrs(attr)
+	}
+	return h.next.Handle(ctx, masked)
+}
+
+func (h piiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return piiHandler{next: h.next.WithAttrs(MaskPIIAttrs(attrs...))}
+}
+
+func (h piiHandler) WithGroup(name string) slog.Handler {
+	return piiHandler{next: h.next.WithGroup(name)}
 }
 
 func maskPIIAttr(attr slog.Attr) slog.Attr {
