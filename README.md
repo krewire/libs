@@ -14,7 +14,7 @@ The repository is a Go monorepo. Each top-level package can be imported independ
 | [`kern`](./kern) | Kernel boot and workload execution | `Kernel`, `Module`, `Registry`, `Executor`, `Supervisor` |
 | [`vein`](./vein) | Logging, diagnostics, errors, and stack traces | `Setup`, `Install`, `WithAttrs`, `WithHint`, `FormatTree`, `WithStack`, `StackOf` |
 | [`auth`](./auth) | HTTP authentication primitives | `BasicAuth`, `JWTAuth`, `SignJWT`, `ParseJWT`, `Identity`, HTTP errors |
-| [`sec`](./sec) | HTTP security middleware and PII-safe diagnostics | security headers, CORS, CSRF, health endpoints, authentication aliases, policies, SSRF URL validation, PII masking |
+| [`sec`](./sec) | HTTP security middleware and PII-safe diagnostics | security headers, CORS, CSRF, health endpoints, authentication aliases, policies, SSRF URL validation, `MaskPII`, `MaskPIIMap`, `MaskPIIAttrs` |
 | [`config`](./config) | Typed configuration and environment overlays | `Load`, `LoadOrDefault`, `Override`, `.env` parsing, `Vars` |
 | [`validator`](./validator) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
 | [`term`](./term) | Terminal detection and ANSI styling | `Terminal`, `NewTerminal`, `Paint`, colors and styles |

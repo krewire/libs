@@ -2,6 +2,7 @@ package sec
 
 // Tests for PII masking and safe diagnostic redaction.
 import (
+	"log/slog"
 	"reflect"
 	"testing"
 )
@@ -49,5 +50,29 @@ func TestMaskPIIMapDoesNotMutateAndRedactsNestedValues(t *testing.T) {
 func TestMaskPIILeavesNonPIIText(t *testing.T) {
 	if got := MaskPII("request completed with status 200"); got != "request completed with status 200" {
 		t.Fatalf("unexpected masking: %q", got)
+	}
+}
+
+func TestMaskPIIIPv6(t *testing.T) {
+	if got := MaskPII("client [2001:db8::1]"); got != "client [[IPv6 REDACTED]]" {
+		t.Fatalf("MaskPII IPv6 = %q", got)
+	}
+}
+
+func TestMaskPIIAttrsMasksGroupsAndSecrets(t *testing.T) {
+	attrs := MaskPIIAttrs(
+		slog.String("email", "alice@example.com"),
+		slog.String("token", "secret-token"),
+		slog.Group("request", slog.String("ip", "2001:db8::1")),
+	)
+	if attrs[0].Value.String() != "a***@example.com" {
+		t.Fatalf("email = %q", attrs[0].Value.String())
+	}
+	if attrs[1].Value.String() != "[REDACTED]" {
+		t.Fatalf("token = %q", attrs[1].Value.String())
+	}
+	group := attrs[2].Value.Group()
+	if group[0].Value.String() != "[IPv6 REDACTED]" {
+		t.Fatalf("nested IPv6 = %q", group[0].Value.String())
 	}
 }

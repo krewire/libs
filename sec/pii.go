@@ -1,6 +1,8 @@
 package sec
 
 import (
+	"log/slog"
+	"net"
 	"regexp"
 	"strings"
 )
@@ -12,13 +14,11 @@ var (
 	piiCardPattern  = regexp.MustCompile(`\b(?:\d[ -]*?){13,19}\b`)
 	piiPhonePattern = regexp.MustCompile(`\+?[0-9][0-9 ()-]{6,}[0-9]`)
 	piiIPv4Pattern  = regexp.MustCompile(`\b(?:\d{1,3}\.){3}\d{1,3}\b`)
+	piiIPv6Pattern  = regexp.MustCompile(`(?i)(?:[0-9a-f]{1,4}:){2,}[0-9a-f:]{1,}`)
 )
 
 // MaskPII masks common personal data in free-form text. It is intended for
 // logs and diagnostics, not for authorization or data-retention enforcement.
-// The function preserves enough shape for troubleshooting while preventing
-// direct disclosure of email addresses, phone numbers, payment-card numbers,
-// and IPv4 addresses.
 func MaskPII(s string) string {
 	s = piiEmailPattern.ReplaceAllStringFunc(s, func(value string) string {
 		parts := strings.SplitN(value, "@", 2)
@@ -33,6 +33,7 @@ func MaskPII(s string) string {
 	s = piiCardPattern.ReplaceAllStringFunc(s, maskCard)
 	s = piiPhonePattern.ReplaceAllStringFunc(s, maskPhone)
 	s = piiIPv4Pattern.ReplaceAllStringFunc(s, maskIPv4)
+	s = piiIPv6Pattern.ReplaceAllStringFunc(s, maskIPv6)
 	return s
 }
 
@@ -49,6 +50,30 @@ func MaskPIIMap(input map[string]any) map[string]any {
 		output[key] = maskPIIValue(value)
 	}
 	return output
+}
+
+// MaskPIIAttrs returns a copy of slog attributes with string values masked and
+// secret-bearing keys redacted. Groups are traversed recursively.
+func MaskPIIAttrs(attrs ...slog.Attr) []slog.Attr {
+	masked := make([]slog.Attr, len(attrs))
+	for i, attr := range attrs {
+		masked[i] = maskPIIAttr(attr)
+	}
+	return masked
+}
+
+func maskPIIAttr(attr slog.Attr) slog.Attr {
+	if sensitivePIIKey(attr.Key) {
+		return slog.String(attr.Key, redactedPII)
+	}
+	value := attr.Value
+	if value.Kind() == slog.KindString {
+		return slog.String(attr.Key, MaskPII(value.String()))
+	}
+	if value.Kind() != slog.KindGroup {
+		return attr
+	}
+	return slog.Attr{Key: attr.Key, Value: slog.GroupValue(MaskPIIAttrs(value.Group()...)...)}
 }
 
 func maskPIIValue(value any) any {
@@ -69,7 +94,7 @@ func maskPIIValue(value any) any {
 }
 
 func sensitivePIIKey(key string) bool {
-	switch strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(key, "-", ""), "_", "")) {
+	switch strings.ToLower(strings.NewReplacer("-", "", "_", "").Replace(key)) {
 	case "password", "passwd", "secret", "token", "accesstoken", "refreshtoken", "authorization", "cookie", "setcookie", "clientsecret", "privatekey", "ssn", "socialsecuritynumber":
 		return true
 	default:
@@ -118,5 +143,15 @@ func maskIPv4(value string) string {
 			}
 		}
 	}
+	if net.ParseIP(value) == nil {
+		return value
+	}
 	return parts[0] + "." + parts[1] + ".xxx.xxx"
+}
+
+func maskIPv6(value string) string {
+	if ip := net.ParseIP(value); ip == nil || ip.To4() != nil {
+		return value
+	}
+	return "[IPv6 REDACTED]"
 }
