@@ -11,6 +11,9 @@ libs/
 ├── term/                 # Terminal I/O, colors, formatting
 ├── config/               # Typed `krewire.yaml` loading for all 8 kinds (delegates business validation to core)
 ├── validation/           # Struct validation and extensible rules (`validate:"required"` etc.)
+├── fs/                   # Testable filesystem boundary over io/fs and os
+├── file/                 # File-oriented operations and atomic replacement
+├── storage/              # Backend-independent object storage with local backend
 └── docs/
 ```
 

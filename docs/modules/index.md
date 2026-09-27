@@ -11,6 +11,9 @@ Module documentation catalog for `github.com/krewire/libs`.
 | `sec` | [`sec.md`](./sec.md) | Security middleware, policies, SSRF validation, and PII masking |
 | `config` | [`config.md`](./config.md) | YAML configuration, `.env`, and environment overlays |
 | `validation` | [`validation.md`](./validation.md) | Struct-tag validation and extensible rules |
+| `fs` | [`fs.md`](./fs.md) | Testable filesystem boundary |
+| `file` | [`file.md`](./file.md) | File-oriented operations and atomic replacement |
+| `storage` | [`storage.md`](./storage.md) | Backend-independent object storage |
 | `term` | [`term.md`](./term.md) | Terminal detection, ANSI colors, styles, and output |
 | `markdown` | [`markdown.md`](./markdown.md) | Markdown-to-HTML rendering and link prefixing |
 
