@@ -21,6 +21,7 @@ The repository is a Go monorepo. Each top-level package can be imported independ
 | [`file`](./file) | File-oriented read, write, copy, atomic replacement, and context-aware operations | `Read`, `Write`, `WriteAtomic`, `Copy`, `ReadContext`, `WriteContext` |
 | [`storage`](./storage) | Backend-independent object storage boundary | `Store`, `ContextStore`, `Local`, `NewMemory`, `ObjectInfo` |
 | [`functional`](./functional) | Generic closure-based utilities | `Memoize`, `MemoizeWithTTL`, `Bind`, `Compose`, `Map`, `Filter`, `Reduce`, `Pipe`, `Counter` |
+| [`resilience`](./resilience) | Failure handling for closure-based workloads | `Retry`, `RetryOptions`, `CircuitBreaker` |
 | [`runner`](./runner) | Runtime contract for all workload types | `Runner`, `Func` |
 | [`app`](./app) | Application bootstrap, lifecycle, and service container | `Application`, `Container`, `Runner`, `New`, `Run`, `Bootstrap`, `Shutdown` |
 | [`service`](./service) | Service provider contracts | `Provider`, `Registry`, `Starter`, `Stopper` |

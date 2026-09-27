@@ -15,6 +15,7 @@ Module documentation catalog for `github.com/krewire/libs`.
 | `file` | [`file.md`](./file.md) | File-oriented operations and atomic replacement |
 | `storage` | [`storage.md`](./storage.md) | Backend-independent object storage |
 | `functional` | [`functional.md`](./functional.md) | Generic closure-based utilities |
+| `resilience` | [`resilience.md`](./resilience.md) | Retry policies and circuit breakers |
 | `runner` | [`runner.md`](./runner.md) | Runtime contract for all workload types |
 | `app` | [`app.md`](./app.md) | Application bootstrap, lifecycle, and service container |
 | `service` | [`service.md`](./service.md) | Service provider contracts |
