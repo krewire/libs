@@ -10,7 +10,7 @@ libs/
 ├── sec/                  # Krewire Security — auth integration, headers, CORS, CSRF, health, policies, SSRF URL validation, PII masking, and slog masking
 ├── term/                 # Terminal I/O, colors, formatting
 ├── config/               # Typed `krewire.yaml` loading for all 8 kinds (delegates business validation to core)
-├── validator/            # Struct validation and extensible rules (`validate:"required"` etc.)
+├── validation/           # Struct validation and extensible rules (`validate:"required"` etc.)
 └── docs/
 ```
 
@@ -20,7 +20,7 @@ libs/
 - **Modular at every Scope (SRP/SoC).** Even `Unit` is a module — one concern per file/package, no God Module. Industry: SRP (SOLID), Separation of Concerns (Parnas), High Cohesion/Low Coupling, Unix "Do one thing well". Applies from `libs/core.Scope` → `libs/core.Kind` → `libs/core.ScopeUnit`.
 - **Scope hierarchy as code.** `core.Scope` (`KWL-ARCH-J2K9Q`) codifies `Workspace → Module → Domain → Service → Unit` (Krewire Workspace = Go `go.work` at hub root; `Module ⊃ Service ⊃ Unit`, Unit = Go package / `pkg.Func`) with `ParseScope`/`Less()`; all specs/tests declare scope, enabling `kiw test --spec` filtering (KWL-TEST-P8M4L).
 - **Monorepo, independent versioning.** Each package is importable alone; consumers pull only what they need.
-- **Single config authority.** `config` + `validator` enforce the `krewire.yaml`-only rule for every workload; used by `framework`, `krewire`, and `mdbind`; business validation delegates to `core`.
+- **Single config authority.** `config` + `validation` enforce the `krewire.yaml`-only rule for every workload; used by `framework`, `krewire`, and `mdbind`; business validation delegates to `core`.
 - **No re-implementation.** Where stdlib covers it (`flag`, `log/slog`, `os`), libs does not duplicate.
 - **Cross-repo replace for local dev.** `framework/go.mod` → `replace github.com/krewire/libs => ../libs` during development, removed before tag.
 

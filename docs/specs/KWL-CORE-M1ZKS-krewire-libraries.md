@@ -25,7 +25,7 @@ ecosystem standardizes on it instead of shipping parallel packages.
 
 ### 1.1 Current State
 
-- Module root `github.com/krewire/libs` targeting Go 1.26.0 with `core`, `auth`, `sec`, `vein`, `kern`, `config`, `validator`, `term`, and `markdown` packages.
+- Module root `github.com/krewire/libs` targeting Go 1.26.0 with `core`, `auth`, `sec`, `vein`, `kern`, `config`, `validation`, `term`, and `markdown` packages.
 
 ## 2. Problem Statement
 

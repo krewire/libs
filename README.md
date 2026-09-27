@@ -16,7 +16,7 @@ The repository is a Go monorepo. Each top-level package can be imported independ
 | [`auth`](./auth) | HTTP authentication primitives | `BasicAuth`, `JWTAuth`, `SignJWT`, `ParseJWT`, `Identity`, HTTP errors |
 | [`sec`](./sec) | HTTP security middleware and PII-safe diagnostics | security headers, CORS, CSRF, health endpoints, authentication aliases, policies, SSRF URL validation, `MaskPII`, `MaskPIIMap`, `MaskPIIAttrs` |
 | [`config`](./config) | Typed configuration and environment overlays | `Load`, `LoadOrDefault`, `Override`, `.env` parsing, `Vars` |
-| [`validator`](./validator) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
+| [`validation`](./validation) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
 | [`term`](./term) | Terminal detection and ANSI styling | `Terminal`, `NewTerminal`, `Paint`, colors and styles |
 | [`markdown`](./markdown) | Markdown-to-HTML rendering | GFM rendering, heading IDs, base-prefixed links |
 
@@ -73,8 +73,8 @@ type User struct {
     Role  string `validate:"oneof=admin viewer"`
 }
 
-if err := validator.Struct(User{Email: "user@example.com", Role: "viewer"}); err != nil {
-    // *validator.ValidationError contains field-level failures.
+if err := validation.Struct(User{Email: "user@example.com", Role: "viewer"}); err != nil {
+    // *validation.ValidationError contains field-level failures.
     return err
 }
 ```

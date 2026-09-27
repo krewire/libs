@@ -22,7 +22,7 @@ The ecosystem has a declarative center (`libs/core` — *what* is valid) but no 
 ## 3. Goals
 
 - G1 — `libs/kern` provides generic `Kernel`, `Module`, `Registry`, `Supervisor`, and `Executor` — stdlib-only plus `libs/core`.
-- G2 — Boot from `core.Project`: load `krewire.yaml` via `libs/config` (caller-provided, not hard-coded), validate via `libs/validator` + `core`, register modules in dependency order.
+- G2 — Boot from `core.Project`: load `krewire.yaml` via `libs/config` (caller-provided, not hard-coded), validate via `libs/validation` + `core`, register modules in dependency order.
 - G3 — Supervision: manage lifecycle of registered modules (start, health, stop) with signal-aware graceful shutdown and hot-reload hook.
 - G4 — Zero coupling: `libs/kern` never imports `framework`; `framework` provides modules that satisfy `kern.Module`.
 
@@ -69,7 +69,7 @@ The ecosystem has a declarative center (`libs/core` — *what* is valid) but no 
 
 ## 6. Non-Functional Requirements
 
-- NFR1 — Stdlib plus `libs/core` only; optional `libs/config`/`libs/validator` via `Loader` injection, not hard dependency.
+- NFR1 — Stdlib plus `libs/core` only; optional `libs/config`/`libs/validation` via `Loader` injection, not hard dependency.
 - NFR2 — `gofmt -l .` empty, `go vet ./...` clean, `go test ./...` with in-memory fakes; no external services.
 - NFR3 — Backward compatible with existing `framework/app` boot — `kern` is additive, not a breaking replacement.
 

@@ -1,14 +1,14 @@
-// Package validator validates structs using rules declared in `validate`
+// Package validation validates structs using rules declared in `validate`
 // struct tags. It is framework-agnostic and stdlib-only, so the web and CLI
 // layers can share one rule model.
-package validator
+package validation
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/krewire/libs/validator/rules"
+	"github.com/krewire/libs/validation/rules"
 )
 
 // Struct validates v (a struct or pointer to a struct) against its `validate`

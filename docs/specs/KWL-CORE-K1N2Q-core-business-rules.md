@@ -18,19 +18,19 @@
 - Kind/workload definitions live in multiple places; adding `worker`/`service`/`infra` required touching 10+ files.
 - SpecID and requirement ID formats are documented but not enforced as types.
 - Invariants are enforced ad-hoc in `krewire` and `framework`, not as reusable business rules.
-- `libs/config` and `libs/validator` cannot delegate workload-aware validation to a shared authority.
+- `libs/config` and `libs/validation` cannot delegate workload-aware validation to a shared authority.
 
 ## 3. Goals
 
 - G1 — `libs/core` becomes the single authority for `Kind`, `Workload`, `SpecID`, `RequirementID`, `Project`, and domain events.
 - G2 — 100% backward compatible: existing `ExitCode`/`Error` API unchanged; new types are additive.
 - G3 — Pure domain layer: `core` has zero dependencies outside stdlib; it never imports `framework` or `krewire`.
-- G4 — All business validation is reusable via `core` so `libs/config`, `libs/validator`, `framework`, and `krewire` converge.
+- G4 — All business validation is reusable via `core` so `libs/config`, `libs/validation`, `framework`, and `krewire` converge.
 
 ## 4. Non-Goals
 
 - NG1 — Not an executor or lifecycle manager; that is `libs/kern` (`KWL-KERN-X8P3L`).
-- NG2 — Not re-implementing `libs/config` (YAML loading) or `libs/validator` (struct validation); `core` provides types and business predicates those packages call.
+- NG2 — Not re-implementing `libs/config` (YAML loading) or `libs/validation` (struct validation); `core` provides types and business predicates those packages call.
 - NG3 — No I/O, no filesystem, no `os.Getenv` inside `core`; side effects stay in `kern`/`krewire`.
 
 ## 5. Requirements
