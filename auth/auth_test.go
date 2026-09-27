@@ -1,5 +1,6 @@
 package auth
 
+// Tests for SEC-A01-002, SEC-A02-002, SEC-A03-001, SEC-A09-001.
 import (
 	"context"
 	"net/http"

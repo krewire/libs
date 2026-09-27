@@ -1,5 +1,6 @@
 package sec
 
+// Tests for SEC-A01-001.
 import (
 	"net/http"
 	"net/http/httptest"

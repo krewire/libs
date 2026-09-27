@@ -1,5 +1,6 @@
 package auth
 
+// Tests for SEC-A02-001, SEC-A02-002, SEC-A07-001.
 import (
 	"strings"
 	"testing"

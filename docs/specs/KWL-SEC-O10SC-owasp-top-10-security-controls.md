@@ -46,7 +46,7 @@ Without a centralized, standardized security specification and baseline implemen
 | SEC-A04-001 | A04:2021 - Insecure Design | `sec.Health` must decouple liveness (`/healthz`) from readiness (`/readyz`) probes with configurable check callbacks. | Must |
 | SEC-A05-001 | A05:2021 - Security Misconfiguration | `sec.SecurityHeaders` must apply default security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS, and Content Security Policy. | Must |
 | SEC-A05-002 | A05:2021 - Security Misconfiguration | `sec.CORS` must validate request origins explicitly and prevent unrestricted wildcard usage when credentials are allowed. | Must |
-| SEC-A06-001 | A06:2021 - Vulnerable Components | `libs/sec` and `libs/auth` must use 100% Go standard library packages with zero external dependencies. | Must |
+| SEC-A06-001 | A06:2021 - Vulnerable Components | `libs/auth` uses only the Go standard library. `libs/sec` may use the repository's pinned `golang.org/x/net/html` tokenizer for safe HTML parsing; dependencies must remain pinned and vulnerability-scanned. | Must |
 | SEC-A07-001 | A07:2021 - Identification & Auth | `JWTAuth` and `ParseJWT` must validate claims (`exp`, `nbf`, `iat`) with configurable clock skew leeway (`WithLeeway`). | Must |
 | SEC-A08-001 | A08:2021 - Software/Data Integrity | `sec.CSRF` must implement double-submit cookie protection with HMAC-SHA256 signature verification for state-changing HTTP methods. | Must |
 | SEC-A09-001 | A09:2021 - Security Logging | Security failures must return structured `HTTPError` instances (`401`, `403`) without leaking secrets or credentials in logs. | Must |
@@ -55,9 +55,9 @@ Without a centralized, standardized security specification and baseline implemen
 ## 6. Non-Functional Requirements
 
 - NFR1 — **Zero Allocations on Safe Paths.** Header and policy evaluation on safe paths must minimize allocations.
-- NFR2 — **Stdlib Alignment.** Zero third-party Go dependencies.
+- NFR2 — **Dependency Hygiene.** `auth` remains stdlib-only; `sec` uses only pinned dependencies with vulnerability scanning required.
 - NFR3 — **Fail-Closed Default.** Any unauthenticated or unauthorized evaluation must result in immediate `401 Unauthorized` or `403 Forbidden` rejection.
-- NFR4 — **Quality & Test Coverage.** All OWASP Top 10 requirement IDs must be covered by unit tests with `// Tests for SEC-*` traceability tags.
+- NFR4 — **Quality & Test Coverage.** All implemented OWASP requirement IDs must be covered by unit tests with `// Tests for SEC-*` traceability tags. The SSRF boundary is verified by integration tests in consuming services.
 
 ## 7. Traceability Matrix
 
