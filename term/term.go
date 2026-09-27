@@ -62,12 +62,40 @@ type Terminal struct {
 	ColorSupported bool
 }
 
-// NewTerminal detects color support from the NO_COLOR and TERM environment
-// variables.
+// IsTerminal reports whether f is an interactive terminal character device.
+func IsTerminal(f *os.File) bool {
+	if f == nil {
+		return false
+	}
+	fi, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return (fi.Mode() & os.ModeCharDevice) != 0
+}
+
+// NewTerminal detects color support from environment variables (NO_COLOR, CLICOLOR_FORCE, TERM)
+// and verifies whether standard output is an interactive terminal.
 func NewTerminal() *Terminal {
-	_, noColor := os.LookupEnv("NO_COLOR")
+	return NewTerminalFor(os.Stdout)
+}
+
+// NewTerminalFor detects color support for the given file handle.
+func NewTerminalFor(f *os.File) *Terminal {
+	if _, noColor := os.LookupEnv("NO_COLOR"); noColor {
+		return &Terminal{ColorSupported: false}
+	}
+	if force, ok := os.LookupEnv("CLICOLOR_FORCE"); ok && force != "" && force != "0" {
+		return &Terminal{ColorSupported: true}
+	}
+	if force, ok := os.LookupEnv("FORCE_COLOR"); ok && force != "" && force != "0" {
+		return &Terminal{ColorSupported: true}
+	}
 	ter, _ := os.LookupEnv("TERM")
-	return &Terminal{ColorSupported: !noColor && ter != "dumb"}
+	if ter == "dumb" {
+		return &Terminal{ColorSupported: false}
+	}
+	return &Terminal{ColorSupported: IsTerminal(f)}
 }
 
 // Paint colors text, degrading to plain text when color is unsupported.

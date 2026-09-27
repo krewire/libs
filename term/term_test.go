@@ -22,3 +22,21 @@ func TestNewTerminal(t *testing.T) {
 	// on the environment.
 	_ = NewTerminal()
 }
+
+func TestNewTerminalFor_NilAndRegularFile(t *testing.T) {
+	if IsTerminal(nil) {
+		t.Error("nil file should not be terminal")
+	}
+	term := NewTerminalFor(nil)
+	if term.ColorSupported {
+		t.Error("nil file should not have ColorSupported without force env")
+	}
+}
+
+func TestNewTerminalFor_ForceColor(t *testing.T) {
+	t.Setenv("CLICOLOR_FORCE", "1")
+	term := NewTerminalFor(nil)
+	if !term.ColorSupported {
+		t.Error("CLICOLOR_FORCE=1 should enable color even for non-tty")
+	}
+}

@@ -66,3 +66,14 @@ func TestKWL_MD_003_RenderDeterministic(t *testing.T) {
 		t.Error("identical input must render identically")
 	}
 }
+
+func TestPrefixLinks_PreservesCodeBlocks(t *testing.T) {
+	in := `<p><a href="/real-link">Link</a></p><pre><code><a href="/code-link">code</a></code></pre>`
+	got := PrefixLinks(in, "/base/")
+	if !strings.Contains(got, `href="/base/real-link"`) {
+		t.Errorf("real link should be prefixed: %s", got)
+	}
+	if !strings.Contains(got, `href="/code-link"`) {
+		t.Errorf("code link must be preserved: %s", got)
+	}
+}

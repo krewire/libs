@@ -51,12 +51,40 @@ func PrefixLinks(html, base string) string {
 	return prefixLinks(html, base)
 }
 
-// prefixLinks rewrites absolute href/src links so they resolve under base.
+var codeBlockRe = regexp.MustCompile(`(?is)(<pre\b[^>]*>.*?</pre>|<code\b[^>]*>.*?</code>)`)
+
+// prefixLinks rewrites absolute href/src links so they resolve under base,
+// skipping <pre> and <code> blocks to prevent modifying code examples.
 func prefixLinks(html, base string) string {
 	prefix := ""
 	if base != "" && base != "/" {
 		prefix = strings.Trim(base, "/")
 	}
+	if prefix == "" {
+		return html
+	}
+
+	matches := codeBlockRe.FindAllStringIndex(html, -1)
+	if len(matches) == 0 {
+		return rewriteLinks(html, prefix)
+	}
+
+	var sb strings.Builder
+	lastIdx := 0
+	for _, m := range matches {
+		if m[0] > lastIdx {
+			sb.WriteString(rewriteLinks(html[lastIdx:m[0]], prefix))
+		}
+		sb.WriteString(html[m[0]:m[1]])
+		lastIdx = m[1]
+	}
+	if lastIdx < len(html) {
+		sb.WriteString(rewriteLinks(html[lastIdx:], prefix))
+	}
+	return sb.String()
+}
+
+func rewriteLinks(html, prefix string) string {
 	return absLinkRe.ReplaceAllStringFunc(html, func(m string) string {
 		sub := absLinkRe.FindStringSubmatch(m)
 		attr, rest := sub[1], sub[2]

@@ -49,6 +49,10 @@ func LogError(l *slog.Logger, msg string, err error) {
 	if l == nil {
 		l = slog.Default()
 	}
+	if err == nil {
+		l.Log(context.Background(), slog.LevelError, msg)
+		return
+	}
 	attrs := append(ErrAttrs(err), slog.String("error", err.Error()))
 	if hint := HintOf(err); hint != "" {
 		attrs = append(attrs, slog.String("hint", hint))

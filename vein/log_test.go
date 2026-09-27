@@ -43,3 +43,19 @@ func TestLogError(t *testing.T) {
 		t.Errorf("record fields = %v", m)
 	}
 }
+
+func TestLogError_NilError(t *testing.T) {
+	var buf bytes.Buffer
+	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	// Must not panic when err is nil
+	LogError(l, "something with nil error", nil)
+
+	var m map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &m); err != nil {
+		t.Fatalf("record is not JSON: %v", err)
+	}
+	if m["msg"] != "something with nil error" {
+		t.Errorf("expected msg field, got %v", m)
+	}
+}
