@@ -14,6 +14,8 @@ Module documentation catalog for `github.com/krewire/libs`.
 | `fs` | [`fs.md`](./fs.md) | Testable filesystem boundary |
 | `file` | [`file.md`](./file.md) | File-oriented operations and atomic replacement |
 | `storage` | [`storage.md`](./storage.md) | Backend-independent object storage |
+| `app` | [`app.md`](./app.md) | Application bootstrap, lifecycle, and service container |
+| `service` | [`service.md`](./service.md) | Service provider contracts |
 | `term` | [`term.md`](./term.md) | Terminal detection, ANSI colors, styles, and output |
 | `markdown` | [`markdown.md`](./markdown.md) | Markdown-to-HTML rendering and link prefixing |
 

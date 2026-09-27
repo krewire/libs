@@ -14,6 +14,8 @@ libs/
 ├── fs/                   # Testable filesystem boundary over io/fs and os
 ├── file/                 # File-oriented operations and atomic replacement
 ├── storage/              # Backend-independent object storage with local backend
+├── app/                  # Application bootstrap, lifecycle, and service container
+├── service/              # Service provider contracts
 └── docs/
 ```
 
