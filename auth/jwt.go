@@ -47,10 +47,45 @@ func DefaultClaims(sub string, ttl time.Duration) Claims {
 	return Claims{"sub": sub, "iat": now, "exp": now + int64(ttl.Seconds())}
 }
 
-// ParseJWT verifies signature (alg pinned to HS256) and expiry.
-func ParseJWT(secret []byte, token string) (Claims, error) {
+// RecommendedMinSecretLength is 32 bytes (256 bits) per RFC 7518 §3.2 for HS256.
+const RecommendedMinSecretLength = 32
+
+// ParseOptions tunes ParseJWT verification.
+type ParseOptions struct {
+	Leeway          time.Duration
+	RequireExp      bool
+	MinSecretLength int
+}
+
+// ParseOption configures ParseOptions.
+type ParseOption func(*ParseOptions)
+
+// WithLeeway sets clock skew tolerance when checking exp, nbf, and iat.
+func WithLeeway(d time.Duration) ParseOption {
+	return func(o *ParseOptions) { o.Leeway = d }
+}
+
+// WithRequireExp requires the exp claim to be present.
+func WithRequireExp(req bool) ParseOption {
+	return func(o *ParseOptions) { o.RequireExp = req }
+}
+
+// WithMinSecretLength sets the minimum allowed secret key length in bytes.
+func WithMinSecretLength(n int) ParseOption {
+	return func(o *ParseOptions) { o.MinSecretLength = n }
+}
+
+// ParseJWT verifies signature (alg pinned to HS256), expiry, nbf, and iat.
+func ParseJWT(secret []byte, token string, opts ...ParseOption) (Claims, error) {
 	if len(secret) == 0 {
 		return nil, errors.New("auth: empty jwt secret")
+	}
+	po := &ParseOptions{}
+	for _, f := range opts {
+		f(po)
+	}
+	if po.MinSecretLength > 0 && len(secret) < po.MinSecretLength {
+		return nil, fmt.Errorf("%w: secret must be at least %d bytes", ErrInvalidToken, po.MinSecretLength)
 	}
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
@@ -82,11 +117,30 @@ func ParseJWT(secret []byte, token string) (Claims, error) {
 	if err := json.Unmarshal(rawPayload, &claims); err != nil {
 		return nil, fmt.Errorf("%w: payload json", ErrInvalidToken)
 	}
+
+	now := time.Now().Unix()
+	leewaySec := int64(po.Leeway.Seconds())
+
 	if expv, ok := claims["exp"]; ok {
-		if exp, ok := toInt64(expv); !ok || time.Now().Unix() >= exp {
+		if exp, ok := toInt64(expv); !ok || now-leewaySec >= exp {
 			return nil, fmt.Errorf("%w: expired", ErrInvalidToken)
 		}
+	} else if po.RequireExp {
+		return nil, fmt.Errorf("%w: missing required exp claim", ErrInvalidToken)
 	}
+
+	if nbfv, ok := claims["nbf"]; ok {
+		if nbf, ok := toInt64(nbfv); !ok || now+leewaySec < nbf {
+			return nil, fmt.Errorf("%w: token not yet valid (nbf)", ErrInvalidToken)
+		}
+	}
+
+	if iatv, ok := claims["iat"]; ok {
+		if iat, ok := toInt64(iatv); !ok || now+leewaySec < iat {
+			return nil, fmt.Errorf("%w: token issued in the future (iat)", ErrInvalidToken)
+		}
+	}
+
 	return claims, nil
 }
 
@@ -95,6 +149,24 @@ type JWTOptions struct {
 	CookieName        string
 	ContinueOnMissing bool
 	Required          []ClaimCheck
+	Leeway            time.Duration
+	RequireExp        bool
+	MinSecretLength   int
+}
+
+// WithJWTLeeway configures clock skew tolerance for JWTAuth middleware.
+func WithJWTLeeway(d time.Duration) func(*JWTOptions) {
+	return func(o *JWTOptions) { o.Leeway = d }
+}
+
+// WithJWTRequireExp configures whether exp claim is required.
+func WithJWTRequireExp(req bool) func(*JWTOptions) {
+	return func(o *JWTOptions) { o.RequireExp = req }
+}
+
+// WithJWTMinSecretLength configures minimum secret length for JWTAuth middleware.
+func WithJWTMinSecretLength(n int) func(*JWTOptions) {
+	return func(o *JWTOptions) { o.MinSecretLength = n }
 }
 
 // ClaimCheck asserts one claim equality.
@@ -126,7 +198,7 @@ func JWTAuth(secret []byte, opts ...func(*JWTOptions)) Middleware {
 				Error(w, Unauthorized("missing bearer token"))
 				return
 			}
-			claims, err := ParseJWT(secret, token)
+			claims, err := ParseJWT(secret, token, WithLeeway(o.Leeway), WithRequireExp(o.RequireExp), WithMinSecretLength(o.MinSecretLength))
 			if err != nil {
 				Error(w, Unauthorized("invalid token"))
 				return
@@ -137,6 +209,7 @@ func JWTAuth(secret []byte, opts ...func(*JWTOptions)) Middleware {
 					return
 				}
 			}
+
 			id := &Identity{Method: "jwt", Claims: claims}
 			if sub, ok := claims["sub"]; ok {
 				id.Subject = fmt.Sprint(sub)
