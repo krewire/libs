@@ -1,17 +1,17 @@
 # Krewire Library Modules
 
-Katalog dokumentasi per modul untuk `github.com/krewire/libs`.
+Module documentation catalog for `github.com/krewire/libs`.
 
-| Modul | Dokumentasi | Fokus |
+| Module | Documentation | Focus |
 |---|---|---|
-| `core` | [`core.md`](./core.md) | Domain primitives, workload, scope, version, dan invariants |
-| `kern` | [`kern.md`](./kern.md) | Kernel execution, module registry, executor, dan supervision |
-| `vein` | [`vein.md`](./vein.md) | Logging, diagnostics, errors, exit codes, dan stack traces |
-| `auth` | [`auth.md`](./auth.md) | Basic Authentication, JWT, identity, claims, dan HTTP errors |
-| `sec` | [`sec.md`](./sec.md) | Security middleware, policies, SSRF validation, dan PII masking |
-| `config` | [`config.md`](./config.md) | YAML configuration, `.env`, dan environment overlays |
-| `validation` | [`validation.md`](./validation.md) | Struct-tag validation dan extensible rules |
-| `term` | [`term.md`](./term.md) | Terminal detection, ANSI colors, styles, dan output |
-| `markdown` | [`markdown.md`](./markdown.md) | Markdown-to-HTML rendering dan link prefixing |
+| `core` | [`core.md`](./core.md) | Domain primitives, workload, scope, version, and invariants |
+| `kern` | [`kern.md`](./kern.md) | Kernel execution, module registry, executor, and supervision |
+| `vein` | [`vein.md`](./vein.md) | Logging, diagnostics, errors, exit codes, and stack traces |
+| `auth` | [`auth.md`](./auth.md) | Basic Authentication, JWT, identity, claims, and HTTP errors |
+| `sec` | [`sec.md`](./sec.md) | Security middleware, policies, SSRF validation, and PII masking |
+| `config` | [`config.md`](./config.md) | YAML configuration, `.env`, and environment overlays |
+| `validation` | [`validation.md`](./validation.md) | Struct-tag validation and extensible rules |
+| `term` | [`term.md`](./term.md) | Terminal detection, ANSI colors, styles, and output |
+| `markdown` | [`markdown.md`](./markdown.md) | Markdown-to-HTML rendering and link prefixing |
 
-Arsitektur repository tersedia di [`../architecture.md`](../architecture.md), sedangkan spesifikasi formal tersedia di [`../specs/`](../specs/).
+Repository architecture is documented in [`../architecture.md`](../architecture.md), while formal specifications are listed in [`../specs/`](../specs/).
