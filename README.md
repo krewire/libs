@@ -131,7 +131,7 @@ CI runs on pushes to `main` and pull requests. It executes formatting, `go vet`,
 - Preserve specification-to-test traceability; formal specifications live in [`docs/specs`](./docs/specs).
 - Update tests and documentation when public behavior changes.
 
-More context is available in [`docs/architecture.md`](./docs/architecture.md), [`docs/philosophy.md`](./docs/philosophy.md), and [`docs/index.md`](./docs/index.md).
+More context is available in [`docs/architecture.md`](./docs/architecture.md), [`docs/modules`](./docs/modules/README.md), [`docs/philosophy.md`](./docs/philosophy.md), and [`docs/index.md`](./docs/index.md).
 
 ## Related repositories
 

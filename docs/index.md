@@ -6,6 +6,7 @@ Krewire Libraries (`github.com/krewire/libs`) — Shared libraries for all 8 kin
 
 - [Architecture](./architecture.md) — module structure, design decisions, dependency graph
 - [Philosophy](./philosophy.md) — principles and contribution guidance
+- [Module documentation](./modules/README.md) — public purpose, API, examples, and boundaries for each Go package
 - [Specifications](./specs/index.md) — formal `github.com/krewire/libs` specs (`KWL-*`)
 
 ## Getting Started
