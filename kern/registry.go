@@ -3,6 +3,7 @@ package kern
 import (
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/krewire/libs/core"
 )
@@ -17,6 +18,7 @@ type Module interface {
 
 // Registry holds modules by name.
 type Registry struct {
+	mu   sync.RWMutex
 	mods map[string]Module
 }
 
@@ -34,6 +36,8 @@ func (r *Registry) Register(m Module) error {
 	if name == "" {
 		return core.UsageError("module name is required")
 	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if _, exists := r.mods[name]; exists {
 		return core.UsageError(fmt.Sprintf("duplicate module %q", name))
 	}
@@ -43,57 +47,88 @@ func (r *Registry) Register(m Module) error {
 
 // Resolve returns the module with the given name.
 func (r *Registry) Resolve(name string) (Module, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	m, ok := r.mods[name]
 	return m, ok
 }
 
 // Ordered returns modules topologically sorted by DependsOn() if implemented,
 // otherwise in registration order (sorted by name for determinism).
+// Circular dependencies are resolved safely without infinite loops.
 func (r *Registry) Ordered() []Module {
-	// Simple deterministic ordering: sort by name, but respect DependsOn if present.
-	// For v1, we do not implement full topological sort; we sort by name and
-	// ensure dependencies appear before dependents when possible via a stable sort.
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	names := make([]string, 0, len(r.mods))
 	for n := range r.mods {
 		names = append(names, n)
 	}
 	sort.Strings(names)
 
-	// If any module declares DependsOn, we attempt to reorder to satisfy it.
-	// This is a best-effort bubble: repeatedly move dependents after dependencies.
-	// For complex graphs, callers should register in dependency order.
-	deps := make(map[string][]string)
+	deps := make(map[string][]string, len(names))
 	for _, n := range names {
 		if d, ok := r.mods[n].(interface{ DependsOn() []string }); ok {
 			deps[n] = d.DependsOn()
 		}
 	}
-	// Simple insertion sort respecting deps: if a appears before its dependency, move it after.
-	for i := 0; i < len(names); i++ {
-		for _, dep := range deps[names[i]] {
-			// Find dep index
-			depIdx := -1
-			for j, n := range names {
-				if n == dep {
-					depIdx = j
-					break
-				}
-			}
-			if depIdx >= 0 && depIdx > i {
-				// Move dependency before dependent
-				depName := names[depIdx]
-				// Remove from depIdx
-				names = append(names[:depIdx], names[depIdx+1:]...)
-				// Insert at i
-				names = append(names[:i], append([]string{depName}, names[i:]...)...)
-				// Restart scan
-				i = -1
-				break
+
+	inDegree := make(map[string]int, len(names))
+	dependents := make(map[string][]string, len(names))
+	for _, n := range names {
+		inDegree[n] = 0
+	}
+	for n, ds := range deps {
+		for _, dep := range ds {
+			if _, exists := r.mods[dep]; exists {
+				inDegree[n]++
+				dependents[dep] = append(dependents[dep], n)
 			}
 		}
 	}
-	out := make([]Module, 0, len(names))
+
+	var queue []string
 	for _, n := range names {
+		if inDegree[n] == 0 {
+			queue = append(queue, n)
+		}
+	}
+
+	var sorted []string
+	visited := make(map[string]bool, len(names))
+
+	for len(queue) > 0 {
+		curr := queue[0]
+		queue = queue[1:]
+		if visited[curr] {
+			continue
+		}
+		visited[curr] = true
+		sorted = append(sorted, curr)
+
+		var nextCandidates []string
+		for _, dep := range dependents[curr] {
+			inDegree[dep]--
+			if inDegree[dep] == 0 && !visited[dep] {
+				nextCandidates = append(nextCandidates, dep)
+			}
+		}
+		sort.Strings(nextCandidates)
+		queue = append(queue, nextCandidates...)
+	}
+
+	// If there were circular dependencies, append any remaining nodes deterministically
+	// to prevent infinite loops.
+	if len(sorted) < len(names) {
+		for _, n := range names {
+			if !visited[n] {
+				sorted = append(sorted, n)
+			}
+		}
+	}
+
+	out := make([]Module, 0, len(sorted))
+	for _, n := range sorted {
 		out = append(out, r.mods[n])
 	}
 	return out

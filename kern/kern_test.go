@@ -83,3 +83,104 @@ func TestSupervisor(t *testing.T) {
 		t.Errorf("Stop error = %v", err)
 	}
 }
+
+type depModule struct {
+	name string
+	deps []string
+}
+
+func (m depModule) Name() string        { return m.name }
+func (m depModule) Init(*Kernel) error  { return nil }
+func (m depModule) DependsOn() []string { return m.deps }
+
+func TestRegistry_CircularDependencyDoesNotHang(t *testing.T) {
+	r := NewRegistry()
+	_ = r.Register(depModule{name: "modA", deps: []string{"modB"}})
+	_ = r.Register(depModule{name: "modB", deps: []string{"modA"}})
+
+	// Must finish immediately and not hang in infinite loop
+	mods := r.Ordered()
+	if len(mods) != 2 {
+		t.Fatalf("expected 2 modules, got %d", len(mods))
+	}
+}
+
+func TestRegistry_TopologicalOrdering(t *testing.T) {
+	r := NewRegistry()
+	// C depends on B, B depends on A
+	_ = r.Register(depModule{name: "modC", deps: []string{"modB"}})
+	_ = r.Register(depModule{name: "modB", deps: []string{"modA"}})
+	_ = r.Register(depModule{name: "modA", deps: nil})
+
+	mods := r.Ordered()
+	if len(mods) != 3 {
+		t.Fatalf("expected 3 modules, got %d", len(mods))
+	}
+	if mods[0].Name() != "modA" || mods[1].Name() != "modB" || mods[2].Name() != "modC" {
+		t.Errorf("unexpected ordering: %s, %s, %s", mods[0].Name(), mods[1].Name(), mods[2].Name())
+	}
+}
+
+func TestRegistry_ConcurrentAccess(t *testing.T) {
+	r := NewRegistry()
+	done := make(chan bool)
+	for i := 0; i < 10; i++ {
+		go func(id int) {
+			_ = r.Register(testModule{name: "mod"})
+			_, _ = r.Resolve("mod")
+			_ = r.Ordered()
+			done <- true
+		}(i)
+	}
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+}
+
+func TestExecutor_ConcurrentAccess(t *testing.T) {
+	e := newExecutor()
+	done := make(chan bool)
+	for i := 0; i < 10; i++ {
+		go func(id int) {
+			e.Register(core.KindApp, func(ctx context.Context, w core.Workload) vein.ExitCode {
+				return vein.ExitCodeSuccess
+			})
+			_ = e.Execute(context.Background(), core.Workload{Kind: core.KindApp})
+			done <- true
+		}(i)
+	}
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+}
+
+type errStopModule struct {
+	stopped *bool
+	err     error
+}
+
+func (m errStopModule) Start(context.Context) error { return nil }
+func (m errStopModule) Stop(context.Context) error {
+	*m.stopped = true
+	return m.err
+}
+
+func TestSupervisor_StopContinuesOnError(t *testing.T) {
+	s := NewSupervisor()
+	stopped1 := false
+	stopped2 := false
+
+	m1 := errStopModule{stopped: &stopped1, err: nil}
+	m2 := errStopModule{stopped: &stopped2, err: vein.FailureError("stop error")}
+
+	s.Add(m1)
+	s.Add(m2)
+
+	err := s.Stop(context.Background())
+	if err == nil {
+		t.Error("expected combined stop error")
+	}
+	if !stopped1 || !stopped2 {
+		t.Errorf("all modules should be stopped: m1=%v, m2=%v", stopped1, stopped2)
+	}
+}

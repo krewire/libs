@@ -2,6 +2,8 @@ package kern
 
 import (
 	"context"
+	"errors"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -84,22 +86,29 @@ func (s *Supervisor) Start(ctx context.Context) error {
 }
 
 // Stop stops all modules with the configured timeout.
+// It attempts to stop all modules in reverse order and combines any errors.
 func (s *Supervisor) Stop(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, s.shutdownTimeout)
 	defer cancel()
 	s.mu.Lock()
 	mods := append([]Startable(nil), s.modules...)
 	s.mu.Unlock()
+
+	var stopErr error
 	// Stop in reverse order
 	for i := len(mods) - 1; i >= 0; i-- {
 		if err := mods[i].Stop(ctx); err != nil {
 			s.mu.Lock()
 			s.health[indexName(i)] = err
 			s.mu.Unlock()
-			return err
+			stopErr = errors.Join(stopErr, err)
+		} else {
+			s.mu.Lock()
+			s.health[indexName(i)] = nil
+			s.mu.Unlock()
 		}
 	}
-	return nil
+	return stopErr
 }
 
 // Health returns a snapshot of module health.
@@ -114,7 +123,5 @@ func (s *Supervisor) Health() map[string]error {
 }
 
 func indexName(i int) string {
-	// Stable key for health map when module names are not tracked here.
-	// Callers using Kernel will have richer health keys.
-	return string(rune('0' + i))
+	return strconv.Itoa(i)
 }
