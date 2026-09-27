@@ -76,4 +76,4 @@ Without a centralized, standardized security specification and baseline implemen
 | SEC-A07-001 | `auth/jwt.go` | `auth/jwt_test.go` |
 | SEC-A08-001 | `sec/csrf.go` | `sec/csrf_test.go` |
 | SEC-A09-001 | `auth/error.go` | `auth/auth_test.go` |
-| SEC-A10-001 | Caller boundary (no outbound HTTP client in `sec`) | Integration tests in consuming services |
+| SEC-A10-001 | `sec/ssrf.go` | `sec/ssrf_test.go` plus integration tests in consuming services |
