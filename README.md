@@ -17,7 +17,7 @@ The repository is a Go monorepo. Each top-level package can be imported independ
 | [`sec`](./sec) | HTTP security middleware and PII-safe diagnostics | security headers, CORS, CSRF, health endpoints, authentication aliases, policies, SSRF URL validation, `MaskPII`, `MaskPIIMap`, `MaskPIIAttrs` |
 | [`config`](./config) | Typed configuration and environment overlays | `Load`, `LoadOrDefault`, `Override`, `.env` parsing, `Vars` |
 | [`validation`](./validation) | Reflection-based struct validation with extensible rule evaluators | `Struct`, `Field`, `rules.Register`, tags such as `required`, `email`, `min`, `max`, `len`, `oneof`, `pattern` |
-| [`fs`](./fs) | Testable filesystem boundary | `FileSystem`, `OS`, `Default`, `Clean` |
+| [`fs`](./fs) | Testable filesystem boundary | `FileSystem`, `OS`, `Memory`, `Default`, `Clean` |
 | [`file`](./file) | File-oriented read, write, copy, and atomic replacement | `Read`, `Write`, `WriteAtomic`, `Copy` |
 | [`storage`](./storage) | Backend-independent object storage boundary | `Store`, `Local`, `ObjectInfo` |
 | [`term`](./term) | Terminal detection and ANSI styling | `Terminal`, `NewTerminal`, `Paint`, colors and styles |

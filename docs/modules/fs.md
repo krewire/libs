@@ -10,6 +10,7 @@ Import: `github.com/krewire/libs/fs`
 
 - `FileSystem` — filesystem contract used by higher-level packages.
 - `OS` — host operating system implementation.
+- `Memory` — concurrency-safe in-memory implementation for tests and ephemeral work.
 - `Default` — default `FileSystem` backed by `OS`.
 - `Clean(root, name)` — joins a root and relative name while rejecting path traversal outside the root.
 
