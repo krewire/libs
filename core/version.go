@@ -129,6 +129,7 @@ const (
 	ModuleLanding   ModuleName = "krewire.github.io"
 	ModuleInternal  ModuleName = "internal"
 	ModuleShip      ModuleName = "ship"
+	ModuleHub       ModuleName = "hub"
 )
 
 // CurrentVersion is the libs module's own version. Bump per release.
