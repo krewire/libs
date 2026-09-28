@@ -124,7 +124,8 @@ const (
 	ModuleMdbind    ModuleName = "mdbind"
 	ModuleKiw       ModuleName = "kiw"
 	ModuleKrewire   ModuleName = "krewire"
-	ModuleGuild     ModuleName = "guild"
+	ModuleBoost     ModuleName = "boost"
+	ModuleGuild     ModuleName = "boost" // backwards-compatible alias
 	ModuleDocs      ModuleName = "docs"
 	ModuleLanding   ModuleName = "krewire.github.io"
 	ModuleInternal  ModuleName = "internal"
@@ -144,7 +145,7 @@ var EcosystemVersions = map[ModuleName]Version{
 	ModuleLibs:      CurrentVersion,
 	ModuleMdbind:    MustParseVersion("0.2.0"),
 	ModuleKiw:       MustParseVersion("0.3.3"),
-	ModuleGuild:     MustParseVersion("0.1.0"),
+	ModuleBoost:     MustParseVersion("0.1.0"),
 	ModuleShip:      MustParseVersion("0.0.0"),
 	ModuleKrewire:   MustParseVersion("0.3.2"),
 	ModuleInternal:  MustParseVersion("0.1.0"),
