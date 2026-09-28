@@ -16,9 +16,6 @@ libs/
 ├── storage/              # Backend-independent object storage with local backend
 ├── functional/            # Generic closure-based utilities
 ├── resilience/            # Retry policies and circuit breakers
-├── runner/               # Runtime contract for all workload types
-├── app/                  # Application bootstrap, lifecycle, and service container
-├── service/              # Service provider contracts
 └── docs/
 ```
 
