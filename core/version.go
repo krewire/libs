@@ -125,7 +125,6 @@ const (
 	ModuleKiw       ModuleName = "kiw"
 	ModuleKrewire   ModuleName = "krewire"
 	ModuleBoost     ModuleName = "boost"
-	ModuleGuild     ModuleName = "boost" // backwards-compatible alias
 	ModuleDocs      ModuleName = "docs"
 	ModuleLanding   ModuleName = "krewire.github.io"
 	ModuleInternal  ModuleName = "internal"

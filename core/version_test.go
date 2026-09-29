@@ -140,7 +140,7 @@ func TestCheckCompatibility(t *testing.T) {
 
 	// Unknown dependency is also reported.
 	unknownReqs := map[ModuleName]map[ModuleName]Version{
-		ModuleKiw: {ModuleGuild: MustParseVersion("0.1.0")},
+		ModuleKiw: {ModuleName("unknown-module"): MustParseVersion("0.1.0")},
 	}
 	if errs := CheckCompatibility(actual, unknownReqs); errs == nil {
 		t.Error("CheckCompatibility should report unknown dependency")
