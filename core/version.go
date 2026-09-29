@@ -134,20 +134,21 @@ const (
 )
 
 // CurrentVersion is the libs module's own version. Bump per release.
-var CurrentVersion = MustParseVersion("0.4.0")
+var CurrentVersion = MustParseVersion("0.1.0")
 
 // EcosystemVersions is the known-good compatibility matrix for the current release.
 // It is the blessed, hand-curated release matrix; each module's own
 // `<module>/version.go` (`Version` + `EcosystemRequires`) is the authoritative
 // per-module declaration that `kiw compat` validates against.
 var EcosystemVersions = map[ModuleName]Version{
-	ModuleFramework: MustParseVersion("0.3.1"),
+	ModuleFramework: MustParseVersion("0.1.0"),
 	ModuleLibs:      CurrentVersion,
-	ModuleMdbind:    MustParseVersion("0.2.0"),
-	ModuleKiw:       MustParseVersion("0.3.3"),
+	ModuleMdbind:    MustParseVersion("0.1.0"),
+	ModuleKiw:       MustParseVersion("0.1.0"),
 	ModuleBoost:     MustParseVersion("0.1.0"),
-	ModuleShip:      MustParseVersion("0.0.0"),
-	ModuleKrewire:   MustParseVersion("0.3.2"),
+	ModuleShip:      MustParseVersion("0.1.0"),
+	ModuleHub:       MustParseVersion("0.1.0"),
+	ModuleKrewire:   MustParseVersion("0.1.0"),
 	ModuleInternal:  MustParseVersion("0.1.0"),
 }
 
