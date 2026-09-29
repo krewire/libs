@@ -14,11 +14,13 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	htmlrenderer "github.com/yuin/goldmark/renderer/html"
 )
 
 var gold = goldmark.New(
 	goldmark.WithExtensions(extension.GFM),
 	goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+	goldmark.WithRendererOptions(htmlrenderer.WithUnsafe()),
 )
 
 var absLinkRe = regexp.MustCompile(`(href|src)="/([^"]*)"`)

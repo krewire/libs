@@ -77,3 +77,15 @@ func TestPrefixLinks_PreservesCodeBlocks(t *testing.T) {
 		t.Errorf("code link must be preserved: %s", got)
 	}
 }
+
+func TestRender_PreservesRawHTML(t *testing.T) {
+	src := []byte("<div class=\"custom-box\"><span class=\"badge\">1.1</span></div>")
+	html, err := Render(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(html, `<div class="custom-box">`) || !strings.Contains(html, `<span class="badge">1.1</span>`) {
+		t.Errorf("expected raw HTML to be preserved, got: %s", html)
+	}
+}
+
