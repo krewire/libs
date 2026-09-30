@@ -41,7 +41,7 @@ The ecosystem has two Markdown consumers: `mdbind` (book: `manuscript/*.md → .
 | KWL-MD-001 | Provide `Package: libs/markdown` with `Render` using Goldmark `WithExtensions(GFM)` + `WithParserOptions(WithAutoHeadingID())`, deterministic. | Must |
 | KWL-MD-002 | Provide `RenderWithBase` that calls `Render` then `PrefixLinks(html, base)` where `base` is normalized (`""`/`"/"` → no rewrite, `"/guide/"` → prefix). | Must |
 | KWL-MD-003 | Provide `PrefixLinks(html, base string) string` (exported) that rewrites `href="/rest"`/`src="/rest"` to `href="/<prefix>/rest"` but leaves `href="/<prefix>/..."`, `href="/"` root, and protocol-relative `//` unchanged. | Must |
-| KWL-MD-004 | `mdbind/book` must use `libs/markdown` for `renderMarkdown` and remove direct `goldmark` import; `framework/web/ssg/content.go` and `framework/dsl/kiw.go` must use `libs/markdown` instead of `gomarkdown`. | Must |
+| KWL-MD-004 | `mdbind/book` must use `libs/markdown` for `renderMarkdown` and remove direct `goldmark` import; `framework/web/ssg/content.go` and `kiw/dsl/kiw.go` must use `libs/markdown` instead of `gomarkdown`. | Must |
 | KWL-MD-005 | Remove `gomarkdown/markdown` direct requirement from `framework/go.mod` (kept transitively only if needed via other deps). | Must |
 | KWL-MD-006 | `mdbind` must not import `framework/*`; public `book.Config.Theme` is local `book.Theme`/`Palette` (mirroring `ui.Theme` shape) and `Book.Handler() http.Handler` (stdlib `ServeMux`), not `*ui.Theme`/`*web.Router`. | Must |
 | KWL-MD-007 | Default output for `mdbind/book.Build` is `.krewire/build` (aligned with `kiw` `config.DefaultOutput` and `framework/web/ssg`). | Must |
