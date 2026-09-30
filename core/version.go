@@ -130,6 +130,7 @@ const (
 	ModuleInternal  ModuleName = "internal"
 	ModuleShip      ModuleName = "ship"
 	ModuleHub       ModuleName = "hub"
+	ModuleForge     ModuleName = "forge"
 )
 
 // CurrentVersion is the libs module's own version. Bump per release.
@@ -149,6 +150,7 @@ var EcosystemVersions = map[ModuleName]Version{
 	ModuleHub:       MustParseVersion("0.1.0"),
 	ModuleKrewire:   MustParseVersion("0.1.0"),
 	ModuleInternal:  MustParseVersion("0.1.0"),
+	ModuleForge:     MustParseVersion("0.1.0"),
 }
 
 // CompatibilityIssue describes a single unsatisfied compatibility requirement.
