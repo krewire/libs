@@ -45,7 +45,7 @@ go get github.com/krewire/libs/config
 go get github.com/krewire/libs/sec
 ```
 
-The module currently targets Go `1.26.0` and depends on:
+The module currently targets Go `1.27.1` and depends on:
 
 - `github.com/yuin/goldmark` for Markdown rendering
 - `gopkg.in/yaml.v3` for YAML configuration and variable storage
@@ -109,7 +109,7 @@ if err != nil {
 
 Prerequisites:
 
-- Go `1.26.0` or a compatible newer toolchain
+- Go `1.27.1` or a compatible newer toolchain
 
 Run the same checks used by CI:
 
