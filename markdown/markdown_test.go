@@ -88,4 +88,3 @@ func TestRender_PreservesRawHTML(t *testing.T) {
 		t.Errorf("expected raw HTML to be preserved, got: %s", html)
 	}
 }
-
