@@ -56,16 +56,31 @@ func ValidateKrewireYamlPath(path string) error {
 	return nil
 }
 
+// optInBlockedPackages are the framework batteries a KindApp monolith must not
+// import directly: they are opt-in batteries reserved for their own project
+// kinds. Import paths are matched on a path-segment boundary so subpackages
+// (e.g. "framework/service/gateway") are covered without matching unrelated
+// packages that merely share a prefix.
+var optInBlockedPackages = []string{
+	"github.com/krewire/framework/service",
+	"github.com/krewire/framework/infra",
+}
+
 // HasOptInViolation reports whether importing the given import paths violates
-// opt-in for the declared kind. For example, a KindApp monolith importing
-// framework/service should be flagged.
+// opt-in for the declared kind. Per KWL-CORE-022, a KindApp monolith importing
+// framework/service or framework/infra is a violation: those batteries belong to
+// the service and infra kinds and must cost a monolith nothing.
+//
+// framework/worker is deliberately not blocked — a KindApp project may run
+// background jobs in-process — and the batteries whose Kind matches the project
+// are never violations (e.g. KindService importing framework/service).
 func HasOptInViolation(kind Kind, imported []string) bool {
 	if kind != KindApp {
 		return false
 	}
 	for _, imp := range imported {
-		if strings.Contains(imp, "framework/service") || strings.Contains(imp, "framework/infra") || strings.Contains(imp, "framework/worker") && !strings.Contains(imp, "runtime") {
-			if strings.Contains(imp, "framework/service") || strings.Contains(imp, "framework/infra") {
+		for _, blocked := range optInBlockedPackages {
+			if imp == blocked || strings.HasPrefix(imp, blocked+"/") {
 				return true
 			}
 		}
